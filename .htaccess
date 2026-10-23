@@ -1,0 +1,55 @@
+# Al Vuelo La Rioja · configuración para Apache
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Forzar HTTPS y www
+  RewriteCond %{HTTPS} off [OR]
+  RewriteCond %{HTTP_HOST} !^www\. [NC]
+  RewriteRule ^ https://www.alvuelolarioja.com%{REQUEST_URI} [R=301,L,NE]
+  # /index.html -> /
+  RewriteCond %{THE_REQUEST} \s/index\.html[\s?] [NC]
+  RewriteRule ^index\.html$ / [R=301,L]
+  # URLs de la web anterior
+  RewriteRule ^paratrike-en-la-rioja\.html$ /que-es-un-paratrike.html [R=301,L]
+  RewriteRule ^condiciones-para-volar-seguro\.html$ /que-es-un-paratrike.html#condiciones [R=301,L,NE]
+  RewriteRule ^volar-en-parapente-biplaza-en-la-rioja\.html$ /#experiencia [R=301,L,NE]
+  RewriteRule ^volar-de-forma-segura-en-la-rioja\.html$ /#confianza [R=301,L,NE]
+  RewriteRule ^tarifas-volar-en-paratrike\.html$ /vuelos.html [R=301,L]
+  RewriteRule ^fotografia-parapente-la-rioja\.html$ /galeria.html [R=301,L]
+  RewriteRule ^videos-alvuelo-la-rioja\.html$ /galeria.html [R=301,L]
+  RewriteRule ^contacto-parapente-la-rioja\.html$ /#contacto [R=301,L,NE]
+  RewriteRule ^assets/images/galeria/ticket-regalo\.pdf$ /assets/docs/vale-regalo-al-vuelo-la-rioja.pdf [R=301,L]
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript image/svg+xml application/manifest+json
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType video/mp4 "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
