@@ -23,6 +23,11 @@ assets/fonts/                  Instrument Serif y Manrope, autoalojadas
 .htaccess, robots.txt, sitemap.xml, site.webmanifest, favicon.svg
 ```
 
+## Vista previa online
+
+La web se puede ver en GitHub Pages: https://crsdigitalizacion.github.io/al-vuelo-la-rioja/
+Se actualiza sola en uno o dos minutos cada vez que se suben cambios a la rama `main`. En esa dirección la web lleva `noindex` (no aparece en Google) para no competir con el dominio real; en alvuelolarioja.com no se aplica.
+
 Tras cambiar CSS o JS, sube el número `?v=` de los enlaces en todos los HTML para que los navegadores no usen la versión en caché.
 
 ## Datos utilizados (todos publicados en la web actual alvuelolarioja.com)
