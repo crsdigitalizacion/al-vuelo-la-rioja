@@ -26,13 +26,11 @@
 
   /* WhatsApp: solo si la empresa ha confirmado el número en config.js */
   if (CFG.whatsapp) {
-    var waText = encodeURIComponent('Hola, me gustaría consultar disponibilidad para un vuelo en paratrike.');
+    var waText = encodeURIComponent(CFG.whatsappText || 'Hola, buenas. Me gustaría información sobre los vuelos en paratrike.');
     $$('[data-whatsapp]').forEach(function (a) {
       a.href = 'https://wa.me/' + CFG.whatsapp + '?text=' + waText;
       a.hidden = false;
     });
-    var bar = $('.mobile-bar');
-    if (bar) bar.classList.add('has-wa');
   }
 
   /* ---------- Cabecera ---------- */

@@ -9,9 +9,10 @@ window.ALVUELO = {
   phoneDisplay: '629 30 90 90',
   email: 'info@alvuelolarioja.com',   // Publicado en la web actual
 
-  // WhatsApp oficial: SOLO si la empresa confirma que atiende por WhatsApp
-  // en ese número. Formato internacional sin "+" ni espacios, p. ej. '34629309090'.
-  whatsapp: null,
+  // WhatsApp de Miguel Ángel (confirmado por el cliente). Formato internacional
+  // sin "+" ni espacios. Con null se ocultan todos los botones de WhatsApp.
+  whatsapp: '34629309090',
+  whatsappText: 'Hola, buenas. Estoy interesado en volar en paratrike con Al Vuelo y me gustaría saber los precios y la disponibilidad. ¡Gracias!',
 
   // Endpoint del formulario (Formspree, Getform, Netlify Forms, PHP propio...).
   // Mientras sea null, "Enviar solicitud" abre el correo del visitante con la

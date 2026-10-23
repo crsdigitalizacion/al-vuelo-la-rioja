@@ -13,7 +13,7 @@ galeria.html                   Galería: 22 fotos con visor ampliado y 12 vídeo
 aviso-legal.html, privacidad.html, cookies.html, 404.html
 *.html (8 pequeñas)            Redirecciones desde las URLs de la web anterior (también en .htaccess)
 assets/css/styles.css          Estilos (tokens de color, tipografía y espaciado al principio)
-assets/js/config.js            DATOS EDITABLES: WhatsApp, endpoint del formulario, datos legales
+assets/js/config.js            DATOS EDITABLES: WhatsApp (34629309090) y su mensaje preparado, endpoint del formulario, datos legales
 assets/js/chat.js              Asistente de preguntas (círculo abajo a la derecha): respuestas en la lista INTENTS
 assets/js/main.js              Interacción (menú, vídeo, parallax, tarjetas 3D, reserva, galería)
 assets/img/                    Imágenes WebP en varios tamaños, logotipos e iconos
@@ -47,7 +47,6 @@ Tras cambiar CSS o JS, sube el número `?v=` de los enlaces en todos los HTML pa
 |---|---|---|
 | **Precios vigentes** | `vuelos.html` (tarjetas), `index.html` (`data-price` del formulario, JSON-LD), `preguntas-frecuentes.html` y `regalo-parapente-la-rioja.html` | Los publicados en la web actual (85 € / 130 € / +15 €). Esa página parece antigua (contiene una oferta de septiembre de 2014): **confirmar antes de publicar**. La web indica «el precio final se confirma al cerrar la reserva». |
 | Datos legales (titular, NIF, domicilio) | `config.js` → `legal` | Las páginas legales muestran «pendiente de publicación». **Obligatorio antes de publicar.** |
-| WhatsApp oficial | `config.js` → `whatsapp` | Oculto. Activarlo solo si confirman que atienden por WhatsApp en ese número. |
 | Endpoint del formulario | `config.js` → `formEndpoint` | Sin servidor: «Enviar solicitud» abre el correo del visitante con la solicitud ya redactada para info@alvuelolarioja.com. Con un endpoint (Formspree, Getform, PHP propio…) se envía directamente. |
 | Límites de edad / menores, peso | Preguntas frecuentes | Se indica lo que publica la empresa («cualquier edad o condición física») y se pide consultar los casos particulares al reservar. |
 | Lugar exacto de despegue | Preguntas frecuentes y contacto | «Lugar de salida habitual en las inmediaciones de Logroño, te lo indicamos al confirmar la reserva». |

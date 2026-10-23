@@ -17,6 +17,7 @@
 
   var callLink = '<a href="' + TEL + '">' + PHONE + '</a>';
   var mailLink = '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a>';
+  var WA_URL = CFG.whatsapp ? 'https://wa.me/' + CFG.whatsapp + '?text=' + encodeURIComponent(CFG.whatsappText || 'Hola, buenas. Me gustaría información sobre los vuelos en paratrike.') : null;
 
   // Cada intención: palabras clave (sin tildes, en minúscula) y respuesta en HTML
   var INTENTS = [
@@ -105,7 +106,7 @@
       keys: ['telefono', 'contact', 'llamar', 'email', 'correo', 'horario', 'whatsapp', 'hablar con'],
       answer: function () {
         return 'Puedes hablar directamente con el piloto, Miguel Ángel:<ul><li>Teléfono: ' + callLink + '</li><li>Email: ' + mailLink + '</li>' +
-          (CFG.whatsapp ? '<li><a href="https://wa.me/' + CFG.whatsapp + '" target="_blank" rel="noopener">WhatsApp</a></li>' : '') +
+          (WA_URL ? '<li>WhatsApp: <a href="' + WA_URL + '" target="_blank" rel="noopener">escribir a Miguel Ángel</a></li>' : '') +
           '</ul>Horario de reservas: lunes a domingo, de 9:00 a 20:00.';
       }
     },
@@ -171,6 +172,16 @@
       '</form>' +
       '<p class="assist__foot">Asistente automático con la información publicada por Al Vuelo. Para cualquier otra duda: <a href="' + TEL + '">' + PHONE + '</a></p>' +
     '</section>';
+  if (WA_URL) {
+    var wa = doc.createElement('a');
+    wa.className = 'assist__wa';
+    wa.href = WA_URL;
+    wa.target = '_blank';
+    wa.rel = 'noopener';
+    wa.setAttribute('aria-label', 'Escribir por WhatsApp a Miguel Ángel (se abre en una pestaña nueva)');
+    wa.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 6.9L3 29l6.5-2c1.9 1 4.1 1.6 6.4 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.8-1.7l-.4-.3-3.9 1.2 1.2-3.7-.3-.4a10.3 10.3 0 0 1-1.7-5.6C5.1 10 10 5.2 16 5.2S26.9 10 26.9 15.8 22 26.4 16 26.4z"/><path fill="currentColor" d="M21.9 18.6c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.5 8.5 0 0 1-4.2-3.6c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.7s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.8 5 2.1.9 3 1 4 .8.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3z"/></svg>';
+    root.appendChild(wa);
+  }
   doc.body.appendChild(root);
 
   var fab = root.querySelector('.assist__fab');
