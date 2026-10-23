@@ -71,6 +71,6 @@ Tras cambiar CSS o JS, sube el número `?v=` de los enlaces en todos los HTML pa
 ## Créditos
 
 - Fotografías, logotipos, vídeos y vale regalo: Al Vuelo La Rioja (web actual y canal de YouTube).
-- Vídeo del hero: tramo de 15 s del vídeo «Noja 2» del canal de YouTube de Miguel Ángel Ordóñez (vuelo en paratrike sobre la playa de Noja, Cantabria), recortado, sin sonido y comprimido a 720p. Si tienen el archivo original, se puede regenerar con más calidad, o sustituir por un vuelo en La Rioja.
+- Vídeo de la portada: tramo de 15 s del vídeo «Noja 2» del canal de YouTube de Miguel Ángel Ordóñez (vuelo en paratrike sobre la playa de Noja, Cantabria), sin sonido. Tratado para la portada 3D: limpieza de ruido de compresión, reencuadre del ojo de pez, etalonaje dorado, reescalado a 1080p con enfoque y grano fino (`vuelo-noja-1080.mp4`; `vuelo-noja-720.mp4` para móvil). Con el archivo original de la cámara se podría sacar bastante más calidad.
 - Iconos: dibujados al estilo de Lucide (licencia ISC).
 - Tipografías: Instrument Serif y Manrope (SIL Open Font License).

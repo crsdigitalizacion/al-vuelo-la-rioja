@@ -59,7 +59,7 @@
   // se llama desde el bucle de scroll con «near» = el portal está en pantalla o a punto
   function videoNear(near) {
     if (!videoOK) return;
-    if (near && !videoLoaded) { videoLoaded = true; video.src = video.dataset.src; video.load(); }
+    if (near && !videoLoaded) { videoLoaded = true; video.src = (window.innerWidth < 900 || window.innerHeight < 600) && video.dataset.srcSmall ? video.dataset.srcSmall : video.dataset.src; video.load(); }
     if (!videoLoaded || video.dataset.userPaused || near === videoOn) return;
     videoOn = near;
     if (near) { var pr = video.play(); if (pr && pr.catch) pr.catch(function () { videoOn = false; }); } else video.pause();
