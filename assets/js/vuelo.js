@@ -87,6 +87,8 @@
   var saying = $('.saying');
   var places = $('.places'), track = $('.places__track'), placeEls = $$('.place');
   var pilotPhoto = $('.pilot__photo');
+  var tickets = $$('.ticket');
+  var SIDES = [1, -1, 1]; // derecha, izquierda, derecha
   var route = $('.route'), routeSteps = $$('.route__steps li');
   var landing = $('.landing');
   var alti = $('.altimeter'), altiLinks = $$('.altimeter a'), altiRail = $('.altimeter__rail');
@@ -166,6 +168,22 @@
     }
 
     if (pilotPhoto) pilotPhoto.style.setProperty('--d', passing(pilotPhoto).toFixed(3));
+
+    // Tarjetas de vuelos: salen hacia un lado al alejarse del centro de la pantalla,
+    // tanto por arriba como por abajo, así que funciona al bajar y al subir
+    if (tickets.length && !reduce.matches) {
+      var vw = window.innerWidth;
+      tickets.forEach(function (el, i) {
+        var r = el.getBoundingClientRect();
+        var off = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2); // -1 arriba, 0 centro, 1 abajo
+        var e = clamp((Math.abs(off) - 0.3) / 0.7, 0, 1);
+        e = e * e * (3 - 2 * e);
+        var side = SIDES[i % SIDES.length];
+        el.style.setProperty('--sx', (side * e * vw * 0.65).toFixed(1) + 'px');
+        el.style.setProperty('--sr', (side * e * -28).toFixed(2) + 'deg');
+        el.style.setProperty('--so', (1 - e * 0.85).toFixed(3));
+      });
+    }
 
     if (route) {
       var rp = clamp((passing(route) - 0.22) / 0.4, 0, 1);

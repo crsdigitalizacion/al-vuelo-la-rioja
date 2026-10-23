@@ -397,8 +397,10 @@ svg use { pointer-events: none; }
   position: relative; display: flex; flex-direction: column; padding: 1.8rem;
   border-radius: var(--r-l); background: var(--vidrio); border: 1px solid var(--filo);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d;
-  transition: transform .5s var(--ease-out);
+  /* --sx/--sr/--so: entrada y salida lateral ligada al scroll (vuelo.js); --rx/--ry: inclinación con el ratón (main.js) */
+  transform: translate3d(var(--sx, 0px), 0, 0) rotateY(var(--sr, 0deg)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d;
+  opacity: var(--so, 1);
+  transition: transform .45s var(--ease-out), opacity .3s ease;
 }
 .ticket.is-tilting { transition: transform .08s linear; }
 .ticket::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, .14), transparent 45%); opacity: 0; transition: opacity .3s ease; }
@@ -419,7 +421,7 @@ svg use { pointer-events: none; }
 .extras strong { color: var(--blanco); }
 .extras svg { width: 24px; height: 24px; flex: none; color: var(--vela); }
 .extras a { color: var(--vela); font-weight: 700; }
-@media (max-width: 900px) { .tickets, .extras { grid-template-columns: 1fr; } .ticket { transform: none; } }
+@media (max-width: 900px) { .tickets, .extras { grid-template-columns: 1fr; } }
 
 /* Cómo funciona */
 .route { padding: clamp(4rem, 10vh, 8rem) 0 clamp(6rem, 14vh, 10rem); }

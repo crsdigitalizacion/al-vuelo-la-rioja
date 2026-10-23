@@ -124,18 +124,18 @@
   ].join('\n');
 
   var WING_VS = [
-    'attribute vec3 aPos; attribute vec3 aNor; attribute vec3 aCol;',
+    'attribute vec3 aPos; attribute vec3 aNor; attribute vec3 aCol; attribute float aSpec;',
     'uniform mat4 uModel; uniform mat4 uView; uniform mat4 uProj;',
-    'varying vec3 vNor; varying vec3 vCol; varying float vDepth; varying vec3 vW;',
+    'varying vec3 vNor; varying vec3 vCol; varying float vDepth; varying vec3 vW; varying float vSpec;',
     'void main(){',
     '  vec4 w=uModel*vec4(aPos,1.);',
-    '  vNor=mat3(uModel)*aNor; vCol=aCol; vW=w.xyz;',
+    '  vNor=mat3(uModel)*aNor; vCol=aCol; vW=w.xyz; vSpec=aSpec;',
     '  vec4 v=uView*w; vDepth=-v.z;',
     '  gl_Position=uProj*v;',
     '}'
   ].join('\n');
   var WING_FS = PREC + [
-    'varying vec3 vNor; varying vec3 vCol; varying float vDepth; varying vec3 vW;',
+    'varying vec3 vNor; varying vec3 vCol; varying float vDepth; varying vec3 vW; varying float vSpec;',
     'uniform vec3 uSunDir,uSun,uAmb,uFog; uniform vec3 uCam;',
     'void main(){',
     '  vec3 n=normalize(vNor); if(!gl_FrontFacing) n=-n;',
@@ -143,7 +143,9 @@
     '  float dif=max(dot(n,uSunDir),0.);',
     '  float back=max(dot(-n,uSunDir),0.);',
     '  float rim=pow(1.-max(dot(n,v),0.),3.);',
-    '  vec3 c=vCol*(uAmb*.62+uSun*dif*.95)+vCol*uSun*back*.42+uSun*rim*.12;',
+    '  vec3 h=normalize(uSunDir+v); float sp=pow(max(dot(n,h),0.),48.)*vSpec;',
+    '  float sky=n.y*.5+.5;',
+    '  vec3 c=vCol*(uAmb*(.45+.3*sky)+uSun*dif*.95)+vCol*uSun*back*.5+uSun*(sp*.8+rim*.1);',
     '  c=mix(c,uFog,smoothstep(25.,140.,vDepth)*.8);',
     '  gl_FragColor=vec4(c,1.);',
     '}'
@@ -189,94 +191,229 @@
   var skyBuf = buffer(new Float32Array([-1, -1, 3, -1, -1, 3]));
 
   /* ---------- La vela ---------- */
-  // Arco de radio R; s va de punta a punta (-1..1), t recorre la cuerda (0 borde de ataque, 1 de salida)
-  var SPAN = 64, CHORD = 16, R = 5, ARC = 1.12, CELLS = 26;
-  var YELLOW = hex('#f4c51a'), YELLOW_D = hex('#d9a90d'), CRIMSON = hex('#b5122e'), TRIM = hex('#1b1f3a');
-  function chordAt(s) { return 2.15 * Math.sqrt(Math.max(0.0001, 1 - Math.pow(Math.abs(s), 2.4))) * 0.92 + 0.12; }
-  function wingColor(s, t, upper) {
-    var a = Math.abs(s);
-    // carmesí en las puntas y una llama hacia el centro por el borde de ataque, como la vela real
-    var flame = 0.6 - 0.22 * Math.sin(t * 2.6) - (t < 0.35 ? (0.35 - t) * 0.9 : 0);
-    var red = a > flame;
-    var c = red ? CRIMSON : (upper ? YELLOW : YELLOW_D);
-    if (t < 0.035) c = lerp3(c, TRIM, 0.5);
-    var cell = ((s + 1) / 2 * CELLS) % 1;
-    var seam = Math.pow(Math.abs(cell - 0.5) * 2, 10) * 0.18;
-    var shade = upper ? 1 - seam : 0.82 - seam;
-    return [c[0] * shade, c[1] * shade, c[2] * shade];
+  // s va de punta a punta (-1..1); t recorre la cuerda (0 borde de ataque, 1 borde de salida).
+  // El arco se integra con una curvatura que crece hacia las puntas, como una vela real:
+  // centro casi plano y puntas que caen.
+  var SPAN = 182, CHORD = 17, CELLS = 26, HALF = 5.3, ARC = 1.3, TOPY = 5;
+  var YELLOW = hex('#f6c816'), YELLOW_D = hex('#c99a0a'), CRIMSON = hex('#b10f2c'), CRIMSON_D = hex('#7c0a1f'), INLET = hex('#2a1408');
+  var arcX = [], arcY = [], arcPhi = [];
+  (function () {
+    var x = 0, y = 0, n = SPAN / 2, ds = 1 / n;
+    for (var k = 0; k <= n; k++) {
+      var s = k / n, phi = ARC * Math.pow(s, 1.7);
+      arcX[k] = x; arcY[k] = y; arcPhi[k] = phi;
+      x += Math.cos(phi) * HALF * ds; y -= Math.sin(phi) * HALF * ds;
+    }
+  })();
+  function arcAt(s) { // posición en el arco y ángulo, por interpolación
+    var n = SPAN / 2, f = Math.abs(s) * n, k = Math.min(n - 1, Math.floor(f)), u = f - k;
+    var x = lerp(arcX[k], arcX[k + 1], u), y = lerp(arcY[k], arcY[k + 1], u), p = lerp(arcPhi[k], arcPhi[k + 1], u);
+    var sg = s < 0 ? -1 : 1;
+    return { x: sg * x, y: TOPY + y, nx: sg * Math.sin(p), ny: Math.cos(p) };
   }
-  function airfoil(t) { // espesor NACA simétrico con algo de curvatura
-    var yt = 5 * 0.14 * (0.2969 * Math.sqrt(t) - 0.126 * t - 0.3516 * t * t + 0.2843 * t * t * t - 0.1036 * t * t * t * t);
-    var yc = 0.05 * Math.sin(Math.PI * Math.min(1, t * 1.1));
+  function chordAt(s) { return 2.35 * Math.sqrt(Math.max(0.0001, 1 - Math.pow(Math.abs(s), 2.6))) + 0.18; }
+  function sweepAt(s) { return 0.55 * Math.pow(Math.abs(s), 2.4); } // borde de ataque hacia atrás en las puntas
+  function cellAt(s) { return ((s + 1) / 2 * CELLS) % 1; }
+  function airfoil(t) {
+    var yt = 5 * 0.15 * (0.2969 * Math.sqrt(t) - 0.126 * t - 0.3516 * t * t + 0.2843 * t * t * t - 0.1036 * t * t * t * t);
+    var yc = 0.055 * Math.sin(Math.PI * Math.min(1, t * 1.05));
     return [yc + yt, yc - yt];
   }
-  var wPos = [], wNor = [], wCol = [], wIdx = [];
+  function wingPoint(s, t, upper) {
+    var a = arcAt(s), c = chordAt(s), cell = cellAt(s), bump = Math.sin(Math.PI * cell);
+    var af = airfoil(t), off = (upper ? af[0] : af[1]) * c;
+    // celdas infladas arriba y abajo, con las costillas marcadas
+    if (upper) off += 0.075 * c * bump * Math.sin(Math.PI * Math.min(1, t * 1.15));
+    else off -= 0.03 * c * bump * Math.sin(Math.PI * t);
+    var z = (t - 0.28) * c + sweepAt(s) + (t > 0.9 ? 0.04 * c * bump * (t - 0.9) * 10 : 0); // borde de salida festoneado
+    return [a.x + a.nx * off, a.y + a.ny * off, z];
+  }
+  function wingColor(s, t, upper) {
+    var a = Math.abs(s), cell = cellAt(s);
+    var flame = 0.7 - 0.12 * Math.sin(t * 2.6) - (t < 0.22 ? (0.22 - t) * 1.1 : 0);
+    var red = a > flame;
+    var c = red ? (upper ? CRIMSON : CRIMSON_D) : (upper ? YELLOW : YELLOW_D);
+    // bocas de las celdas en el borde de ataque, por debajo
+    if (!upper && t < 0.075 && Math.abs(cell - 0.5) < 0.33 && a < 0.94) c = lerp3(c, INLET, 0.82);
+    var seam = Math.pow(Math.abs(cell - 0.5) * 2, 12) * 0.28;
+    var k = 1 - seam;
+    return [c[0] * k, c[1] * k, c[2] * k];
+  }
+  function computeNormals(pos, idx) {
+    var nor = new Array(pos.length).fill(0);
+    for (var q = 0; q < idx.length; q += 3) {
+      var ia = idx[q] * 3, ib = idx[q + 1] * 3, ic = idx[q + 2] * 3;
+      var ux = pos[ib] - pos[ia], uy = pos[ib + 1] - pos[ia + 1], uz = pos[ib + 2] - pos[ia + 2];
+      var vx = pos[ic] - pos[ia], vy = pos[ic + 1] - pos[ia + 1], vz = pos[ic + 2] - pos[ia + 2];
+      var fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx;
+      [ia, ib, ic].forEach(function (k) { nor[k] += fx; nor[k + 1] += fy; nor[k + 2] += fz; });
+    }
+    return nor;
+  }
+  var wPos = [], wCol = [], wIdx = [], wSpec = [];
   var ring = CHORD * 2;
   for (var i = 0; i <= SPAN; i++) {
     var s = -1 + 2 * i / SPAN;
-    var th = s * ARC;
-    var nx = Math.sin(th), ny = Math.cos(th);
-    var cx = R * nx, cy = R * ny;
-    var c = chordAt(s);
-    var cell = ((s + 1) / 2 * CELLS) % 1;
     for (var j = 0; j < ring; j++) {
       var upper = j < CHORD;
       var t = upper ? j / (CHORD - 1) : 1 - (j - CHORD) / (CHORD - 1);
-      t = 0.5 - 0.5 * Math.cos(t * Math.PI); // más puntos en los bordes
-      var af = airfoil(t);
-      var off = (upper ? af[0] : af[1]) * c;
-      if (upper) off += 0.06 * c * Math.sin(Math.PI * cell) * Math.sin(Math.PI * Math.min(1, t * 1.3)); // celdas infladas
-      var z = (t - 0.3) * c;
-      wPos.push(cx + nx * off, cy + ny * off, z);
-      wNor.push(0, 0, 0);
+      t = 0.5 - 0.5 * Math.cos(t * Math.PI);
+      var p = wingPoint(s, t, upper);
+      wPos.push(p[0], p[1], p[2]);
       var col = wingColor(s, t, upper);
       wCol.push(col[0], col[1], col[2]);
+      wSpec.push(upper ? 0.55 : 0.25);
     }
   }
   for (i = 0; i < SPAN; i++) for (var j2 = 0; j2 < ring; j2++) {
     var a0 = i * ring + j2, a1 = i * ring + (j2 + 1) % ring, b0 = a0 + ring, b1 = a1 + ring;
     wIdx.push(a0, b0, a1, a1, b0, b1);
   }
-  // normales por acumulación de caras
-  for (i = 0; i < wIdx.length; i += 3) {
-    var ia = wIdx[i] * 3, ib = wIdx[i + 1] * 3, ic = wIdx[i + 2] * 3;
-    var ux = wPos[ib] - wPos[ia], uy = wPos[ib + 1] - wPos[ia + 1], uz = wPos[ib + 2] - wPos[ia + 2];
-    var vx = wPos[ic] - wPos[ia], vy = wPos[ic + 1] - wPos[ia + 1], vz = wPos[ic + 2] - wPos[ia + 2];
-    var fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx;
-    [ia, ib, ic].forEach(function (k) { wNor[k] += fx; wNor[k + 1] += fy; wNor[k + 2] += fz; });
-  }
-  var wingPos = buffer(new Float32Array(wPos)), wingNor = buffer(new Float32Array(wNor)), wingCol = buffer(new Float32Array(wCol));
-  var wingIdx = buffer(new Uint16Array(wIdx), gl.ELEMENT_ARRAY_BUFFER);
-  var wingCount = wIdx.length;
+  // tapas de las puntas
+  [0, SPAN].forEach(function (st) {
+    var base = wPos.length / 3;
+    var cx0 = 0, cy0 = 0, cz0 = 0;
+    for (var q = 0; q < ring; q++) { cx0 += wPos[(st * ring + q) * 3]; cy0 += wPos[(st * ring + q) * 3 + 1]; cz0 += wPos[(st * ring + q) * 3 + 2]; }
+    wPos.push(cx0 / ring, cy0 / ring, cz0 / ring); wCol.push(CRIMSON_D[0], CRIMSON_D[1], CRIMSON_D[2]); wSpec.push(0.2);
+    for (q = 0; q < ring; q++) wIdx.push(base, st * ring + q, st * ring + (q + 1) % ring);
+  });
 
-  /* ---------- Suspentaje y carro ---------- */
+  /* ---------- Carro (paratrike) con piloto y pasajero ---------- */
+  var tPos = [], tCol = [], tIdx = [], tSpec = [];
+  var T = [0, -3.75, 0.05]; // origen del carro respecto a la vela
+  function addTri(pos, col, idx, spec, verts, cols, tris, sp) {
+    var base = pos.length / 3;
+    verts.forEach(function (v, k) { pos.push(v[0] + T[0], v[1] + T[1], v[2] + T[2]); var c = cols[k] || cols[0]; col.push(c[0], c[1], c[2]); spec.push(sp); });
+    tris.forEach(function (v) { idx.push(base + v); });
+  }
+  function cyl(p0, p1, r, color, seg, sp, r1) {
+    seg = seg || 10; r1 = r1 === undefined ? r : r1;
+    var d = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], L = Math.hypot(d[0], d[1], d[2]);
+    d = d.map(function (v) { return v / L; });
+    var up = Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+    var u = [d[1] * up[2] - d[2] * up[1], d[2] * up[0] - d[0] * up[2], d[0] * up[1] - d[1] * up[0]];
+    var ul = Math.hypot(u[0], u[1], u[2]); u = u.map(function (v) { return v / ul; });
+    var w = [d[1] * u[2] - d[2] * u[1], d[2] * u[0] - d[0] * u[2], d[0] * u[1] - d[1] * u[0]];
+    var verts = [], tris = [];
+    for (var k = 0; k <= seg; k++) {
+      var a = k / seg * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+      var o = [u[0] * ca + w[0] * sa, u[1] * ca + w[1] * sa, u[2] * ca + w[2] * sa];
+      verts.push([p0[0] + o[0] * r, p0[1] + o[1] * r, p0[2] + o[2] * r]);
+      verts.push([p1[0] + o[0] * r1, p1[1] + o[1] * r1, p1[2] + o[2] * r1]);
+      if (k < seg) { var b = k * 2; tris.push(b, b + 1, b + 2, b + 2, b + 1, b + 3); }
+    }
+    addTri(tPos, tCol, tIdx, tSpec, verts, [color], tris, sp || 0.2);
+  }
+  function sphere(c, r, color, sp, sy) {
+    var verts = [], tris = [], la = 10, lo = 14;
+    sy = sy || 1;
+    for (var a = 0; a <= la; a++) for (var b = 0; b <= lo; b++) {
+      var th = a / la * Math.PI, ph = b / lo * Math.PI * 2;
+      verts.push([c[0] + r * Math.sin(th) * Math.cos(ph), c[1] + r * sy * Math.cos(th), c[2] + r * Math.sin(th) * Math.sin(ph)]);
+      if (a < la && b < lo) { var q = a * (lo + 1) + b; tris.push(q, q + lo + 1, q + 1, q + 1, q + lo + 1, q + lo + 2); }
+    }
+    addTri(tPos, tCol, tIdx, tSpec, verts, [color], tris, sp || 0.3);
+  }
+  function box(c, sz, color, sp) {
+    var x = sz[0] / 2, y = sz[1] / 2, z = sz[2] / 2, verts = [], tris = [];
+    var F = [[[-x, -y, z], [x, -y, z], [x, y, z], [-x, y, z]], [[x, -y, -z], [-x, -y, -z], [-x, y, -z], [x, y, -z]],
+      [[-x, y, z], [x, y, z], [x, y, -z], [-x, y, -z]], [[-x, -y, -z], [x, -y, -z], [x, -y, z], [-x, -y, z]],
+      [[x, -y, z], [x, -y, -z], [x, y, -z], [x, y, z]], [[-x, -y, -z], [-x, -y, z], [-x, y, z], [-x, y, -z]]];
+    F.forEach(function (f, k) { f.forEach(function (v) { verts.push([c[0] + v[0], c[1] + v[1], c[2] + v[2]]); }); var b = k * 4; tris.push(b, b + 1, b + 2, b, b + 2, b + 3); });
+    addTri(tPos, tCol, tIdx, tSpec, verts, [color], tris, sp || 0.15);
+  }
+  var METAL = hex('#c9ced6'), DARK = hex('#23262d'), TYRE = hex('#141518'), SEAT = hex('#2b2f3a'), YEL = hex('#e8b90f');
+  var RED = hex('#c8202f'), BLUE = hex('#2257a8'), JEANS = hex('#2a3550'), HELMET = hex('#f1f2f4'), SKIN = hex('#d9a27d');
+  // ruedas
+  [[0, -0.93, -1.3], [-0.72, -0.93, 0.55], [0.72, -0.93, 0.55]].forEach(function (w) {
+    cyl([w[0] - 0.07, w[1], w[2]], [w[0] + 0.07, w[1], w[2]], 0.22, TYRE, 14, 0.1);
+    cyl([w[0] - 0.08, w[1], w[2]], [w[0] + 0.08, w[1], w[2]], 0.09, METAL, 10, 0.6);
+  });
+  // chasis
+  cyl([0, -0.82, -1.3], [0, -0.76, 0.55], 0.045, YEL, 8, 0.5);
+  cyl([0, -0.93, -1.3], [0, -0.55, -1.12], 0.035, METAL, 8, 0.6);
+  cyl([-0.72, -0.93, 0.55], [0.72, -0.93, 0.55], 0.04, METAL, 8, 0.6);
+  cyl([-0.72, -0.93, 0.55], [-0.2, -0.78, -0.1], 0.035, YEL, 8, 0.5);
+  cyl([0.72, -0.93, 0.55], [0.2, -0.78, -0.1], 0.035, YEL, 8, 0.5);
+  cyl([-0.35, -0.78, 0.45], [-0.32, 0.75, 0.45], 0.04, YEL, 8, 0.5);
+  cyl([0.35, -0.78, 0.45], [0.32, 0.75, 0.45], 0.04, YEL, 8, 0.5);
+  cyl([-0.42, 0.75, 0.45], [0.42, 0.75, 0.45], 0.04, METAL, 8, 0.6);
+  // asientos en tándem
+  box([0, -0.62, -0.45], [0.5, 0.1, 0.55], SEAT); box([0, -0.25, -0.18], [0.5, 0.65, 0.08], SEAT);
+  box([0, -0.42, 0.18], [0.52, 0.1, 0.5], SEAT); box([0, -0.02, 0.42], [0.52, 0.7, 0.08], SEAT);
+  // piloto (chaqueta roja) y pasajero (azul), con casco
+  cyl([0, -0.52, -0.38], [0, 0.12, -0.3], 0.19, RED, 12, 0.15, 0.17);
+  sphere([0, 0.33, -0.3], 0.15, HELMET, 0.8); sphere([0, 0.28, -0.42], 0.07, SKIN, 0.1);
+  [-1, 1].forEach(function (sd) {
+    cyl([sd * 0.1, -0.56, -0.5], [sd * 0.13, -0.6, -0.95], 0.075, JEANS, 8, 0.1);
+    cyl([sd * 0.13, -0.6, -0.95], [sd * 0.14, -0.82, -1.08], 0.065, JEANS, 8, 0.1);
+    cyl([sd * 0.19, 0.05, -0.32], [sd * 0.24, -0.25, -0.6], 0.06, RED, 8, 0.15);
+  });
+  cyl([0, -0.36, 0.22], [0, 0.32, 0.3], 0.19, BLUE, 12, 0.15, 0.17);
+  sphere([0, 0.53, 0.3], 0.15, HELMET, 0.8); sphere([0, 0.48, 0.18], 0.07, SKIN, 0.1);
+  [-1, 1].forEach(function (sd) {
+    cyl([sd * 0.12, -0.38, 0.1], [sd * 0.3, -0.45, -0.3], 0.075, JEANS, 8, 0.1);
+    cyl([sd * 0.3, -0.45, -0.3], [sd * 0.3, -0.66, -0.5], 0.065, JEANS, 8, 0.1);
+  });
+  // motor y depósito
+  box([0, -0.12, 0.72], [0.36, 0.42, 0.3], DARK, 0.4);
+  cyl([0, -0.5, 0.62], [0, -0.5, 0.82], 0.16, hex('#e9e9e2'), 12, 0.3);
+  // jaula de la hélice: anillo de tubo y radios
+  var CAGE = [0, -0.05, 0.98], CR = 0.78, segs = 36;
+  for (i = 0; i < segs; i++) {
+    var q0 = i / segs * Math.PI * 2, q1 = (i + 1) / segs * Math.PI * 2;
+    cyl([CAGE[0] + Math.cos(q0) * CR, CAGE[1] + Math.sin(q0) * CR, CAGE[2]], [CAGE[0] + Math.cos(q1) * CR, CAGE[1] + Math.sin(q1) * CR, CAGE[2]], 0.022, METAL, 6, 0.7);
+  }
+  for (i = 0; i < 8; i++) {
+    var qa = i / 8 * Math.PI * 2;
+    cyl([CAGE[0] + Math.cos(qa) * 0.12, CAGE[1] + Math.sin(qa) * 0.12, CAGE[2] - 0.12], [CAGE[0] + Math.cos(qa) * CR, CAGE[1] + Math.sin(qa) * CR, CAGE[2]], 0.012, METAL, 5, 0.6);
+  }
+  cyl([-0.32, 0.6, 0.45], [-0.45, 0.45, CAGE[2]], 0.025, METAL, 6, 0.6);
+  cyl([0.32, 0.6, 0.45], [0.45, 0.45, CAGE[2]], 0.025, METAL, 6, 0.6);
+  // hélice (malla aparte para hacerla girar)
+  var pPos = [], pCol = [], pIdx = [], pSpec = [];
+  (function () {
+    var save = [tPos, tCol, tIdx, tSpec];
+    tPos = pPos; tCol = pCol; tIdx = pIdx; tSpec = pSpec;
+    var hub = [CAGE[0], CAGE[1], CAGE[2] - 0.08];
+    box([hub[0], hub[1] + 0.33, hub[2]], [0.09, 0.62, 0.025], hex('#3b2a1c'), 0.5);
+    box([hub[0], hub[1] - 0.33, hub[2]], [0.09, 0.62, 0.025], hex('#3b2a1c'), 0.5);
+    cyl([hub[0], hub[1], hub[2] - 0.06], [hub[0], hub[1], hub[2] + 0.04], 0.06, DARK, 10, 0.5);
+    tPos = save[0]; tCol = save[1]; tIdx = save[2]; tSpec = save[3];
+  })();
+  var PROP_HUB = [CAGE[0] + T[0], CAGE[1] + T[1], CAGE[2] - 0.08 + T[2]];
+
+  function mesh(pos, col, idx, spec) {
+    var nor = computeNormals(pos, idx);
+    return { pos: buffer(new Float32Array(pos)), nor: buffer(new Float32Array(nor)), col: buffer(new Float32Array(col)), spec: buffer(new Float32Array(spec)), idx: buffer(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), count: idx.length };
+  }
+  var wingMesh = mesh(wPos, wCol, wIdx, wSpec);
+  var trikeMesh = mesh(tPos, tCol, tIdx, tSpec);
+  var propMesh = mesh(pPos, pCol, pIdx, pSpec);
+
+  /* ---------- Suspentaje en cascada ---------- */
   var L = [];
-  var hang = [0, -2.6, 0.55];
-  var risers = [[-0.22, -2.05, 0.45], [0.22, -2.05, 0.45]];
-  [-0.92, -0.75, -0.58, -0.4, -0.22, -0.06, 0.06, 0.22, 0.4, 0.58, 0.75, 0.92].forEach(function (s) {
-    var th = s * ARC, c = chordAt(s);
-    var nx = Math.sin(th), ny = Math.cos(th);
-    [0.12, 0.45, 0.8].forEach(function (t) {
-      var af = airfoil(t), off = af[1] * c;
-      var p = [R * nx + nx * off, R * ny + ny * off, (t - 0.3) * c];
-      var r = s < 0 ? risers[0] : risers[1];
-      L.push(p[0], p[1], p[2], r[0], r[1], r[2]);
+  var HANG = [[-0.42 + T[0], 0.75 + T[1], 0.45 + T[2]], [0.42 + T[0], 0.75 + T[1], 0.45 + T[2]]];
+  var RISER = HANG.map(function (h) { return [h[0] * 0.8, h[1] + 0.55, h[2] - 0.05]; });
+  var BRAKE = HANG.map(function (h) { return [h[0] * 1.05, h[1] + 0.2, h[2] + 0.12]; });
+  function seg(a, b) { L.push(a[0], a[1], a[2], b[0], b[1], b[2]); }
+  RISER.forEach(function (r, k) { seg(r, HANG[k]); });
+  var STN = [0.06, 0.18, 0.3, 0.42, 0.54, 0.66, 0.77, 0.87, 0.95];
+  [-1, 1].forEach(function (sd) {
+    var riser = RISER[sd < 0 ? 0 : 1], brake = BRAKE[sd < 0 ? 0 : 1];
+    [0.07, 0.3, 0.55, 0.985].forEach(function (t, row) {
+      var target = row === 3 ? brake : riser;
+      var mains = [];
+      for (var k = 0; k < STN.length; k += 3) {
+        var group = STN.slice(k, k + 3).map(function (s) { var p = wingPoint(sd * s, t, false); return p; });
+        var mid = group.reduce(function (m, p) { return [m[0] + p[0] / group.length, m[1] + p[1] / group.length, m[2] + p[2] / group.length]; }, [0, 0, 0]);
+        var cas = [lerp(mid[0], target[0], 0.32), lerp(mid[1], target[1], 0.32), lerp(mid[2], target[2], 0.32)];
+        group.forEach(function (p) { seg(p, cas); });
+        mains.push(cas);
+      }
+      mains.forEach(function (m) { seg(m, target); });
     });
   });
-  risers.forEach(function (r) { L.push(r[0], r[1], r[2], hang[0] + r[0] * 0.6, hang[1], hang[2]); });
-  // jaula de la hélice (anillo vertical detrás del asiento) y chasis
-  var cage = [0, -2.95, 1.05], cr = 0.55, seg = 28;
-  for (i = 0; i < seg; i++) {
-    var q0 = i / seg * Math.PI * 2, q1 = (i + 1) / seg * Math.PI * 2;
-    L.push(cage[0] + Math.cos(q0) * cr, cage[1] + Math.sin(q0) * cr, cage[2], cage[0] + Math.cos(q1) * cr, cage[1] + Math.sin(q1) * cr, cage[2]);
-  }
-  var frame = [
-    [-0.12, -2.6, 0.55], [-0.15, -3.35, 0.2], [0.12, -2.6, 0.55], [0.15, -3.35, 0.2],
-    [-0.15, -3.35, 0.2], [0, -3.5, -0.55], [0.15, -3.35, 0.2], [0, -3.5, -0.55],
-    [-0.15, -3.35, 0.2], [-0.45, -3.55, 0.7], [0.15, -3.35, 0.2], [0.45, -3.55, 0.7],
-    [0, -2.95, 0.55], [0, -2.95, 1.05], [-0.3, -3.1, 0.25], [0.3, -3.1, 0.25]
-  ];
-  frame.forEach(function (p) { L.push(p[0], p[1], p[2]); });
   var lineBuf = buffer(new Float32Array(L));
   var lineCount = L.length / 3;
 
@@ -468,16 +605,21 @@
     var fog = cur.fog;
 
     gl.useProgram(wingP.p);
-    disableAll();
-    bindAttr(wingP, 'aPos', wingPos, 3); bindAttr(wingP, 'aNor', wingNor, 3); bindAttr(wingP, 'aCol', wingCol, 3);
-    gl.uniformMatrix4fv(wingP.u.uModel, false, model);
     gl.uniformMatrix4fv(wingP.u.uView, false, view);
     gl.uniformMatrix4fv(wingP.u.uProj, false, proj);
     gl.uniform3fv(wingP.u.uSunDir, sun); gl.uniform3fv(wingP.u.uSun, cur.sun);
     gl.uniform3fv(wingP.u.uAmb, cur.amb); gl.uniform3fv(wingP.u.uFog, fog);
     gl.uniform3fv(wingP.u.uCam, camPos);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, wingIdx);
-    gl.drawElements(gl.TRIANGLES, wingCount, gl.UNSIGNED_SHORT, 0);
+    var spin = time * 38;
+    var propModel = mul(model, mul(translate(PROP_HUB[0], PROP_HUB[1], PROP_HUB[2]), mul(rotZ(spin), translate(-PROP_HUB[0], -PROP_HUB[1], -PROP_HUB[2]))));
+    [[wingMesh, model], [trikeMesh, model], [propMesh, propModel]].forEach(function (m) {
+      var g = m[0];
+      disableAll();
+      bindAttr(wingP, 'aPos', g.pos, 3); bindAttr(wingP, 'aNor', g.nor, 3); bindAttr(wingP, 'aCol', g.col, 3); bindAttr(wingP, 'aSpec', g.spec, 1);
+      gl.uniformMatrix4fv(wingP.u.uModel, false, m[1]);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.idx);
+      gl.drawElements(gl.TRIANGLES, g.count, gl.UNSIGNED_SHORT, 0);
+    });
 
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(lineP.p);
@@ -486,7 +628,7 @@
     gl.uniformMatrix4fv(lineP.u.uView, false, view);
     gl.uniformMatrix4fv(lineP.u.uProj, false, proj);
     gl.uniform3fv(lineP.u.uCol, [0.12, 0.13, 0.2]); gl.uniform3fv(lineP.u.uFog, fog);
-    gl.uniform1f(lineP.u.uAlpha, 0.7);
+    gl.uniform1f(lineP.u.uAlpha, 0.42);
     gl.drawArrays(gl.LINES, 0, lineCount);
 
     /* nubes: se ordenan de lejos a cerca */
