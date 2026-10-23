@@ -265,6 +265,19 @@ svg use { pointer-events: none; }
 .video-toggle:active { transform: scale(.94); }
 .video-toggle svg { width: 18px; height: 18px; }
 
+
+/* Botón para ver el vuelo cuando el navegador no deja arrancar el vídeo solo */
+.portal__play {
+  position: absolute; left: 50%; top: 42%; z-index: 2; transform: translate(-50%, -50%);
+  display: none; align-items: center; gap: .7rem; padding: .9rem 1.4rem .9rem 1rem;
+  border: 0; border-radius: 999px; background: var(--vela); color: var(--tinta);
+  font: 700 var(--t-1)/1 var(--sans); cursor: pointer; box-shadow: 0 20px 50px -15px rgba(4, 10, 24, .6);
+  transition: transform .16s var(--ease-out);
+}
+.portal__play svg { width: 26px; height: 26px; }
+.portal__play:active { transform: translate(-50%, -50%) scale(.96); }
+.portal.needs-tap .portal__play { display: inline-flex; }
+
 /* Ascenso: ven, siéntate y vuela */
 .lema { position: relative; height: 330vh; }
 .lema__sticky { position: sticky; top: 0; height: 100svh; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: clamp(2rem, 5vw, 6rem); width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; }

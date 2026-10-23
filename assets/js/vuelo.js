@@ -47,22 +47,59 @@
   var video = $('.portal__video');
   var vToggle = $('.video-toggle');
   var slow = (function () { var c = navigator.connection; return !!(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ''))); })();
-  var videoOK = !!(video && !reduce.matches && !slow), videoLoaded = false, videoOn = false;
-  if (videoOK) {
-    video.addEventListener('playing', function () { video.classList.add('is-playing'); vToggle.classList.add('is-ready'); }, { once: true });
+  // Arranca solo si el navegador lo permite. En iPhone con ahorro de batería (o con
+  // «reducir movimiento») el arranque automático se bloquea: entonces aparece un botón
+  // de reproducir y el vídeo también arranca con el primer toque en la pantalla.
+  var autoOK = !!(video && !reduce.matches && !slow), videoLoaded = false, videoOn = false, blocked = false, gestureArmed = false, portalNear = false;
+  var bigPlay = $('.portal__play');
+  function loadVideo() {
+    if (videoLoaded) return;
+    videoLoaded = true;
+    video.src = (window.innerWidth < 900 || window.innerHeight < 600) && video.dataset.srcSmall ? video.dataset.srcSmall : video.dataset.src;
+    video.load();
+  }
+  function setIcon(playing) {
+    var use = $('use', vToggle);
+    use.setAttribute('href', playing ? '#i-pause' : '#i-play');
+    vToggle.setAttribute('aria-label', playing ? 'Pausar vídeo' : 'Reproducir vídeo');
+  }
+  function needsTap(on) { portal.classList.toggle('needs-tap', on); }
+  function tryPlay() {
+    loadVideo();
+    var pr = video.play();
+    if (pr && pr.then) pr.then(function () { blocked = false; needsTap(false); setIcon(true); }, function () { blocked = true; videoOn = false; needsTap(true); armGesture(); });
+  }
+  function armGesture() {
+    if (gestureArmed) return;
+    gestureArmed = true;
+    var go = function () {
+      doc.removeEventListener('touchend', go, true); doc.removeEventListener('click', go, true);
+      gestureArmed = false;
+      if (portalNear && !video.dataset.userPaused) tryPlay();
+    };
+    doc.addEventListener('touchend', go, true); doc.addEventListener('click', go, true);
+  }
+  if (video) {
+    video.muted = true; video.defaultMuted = true; video.playsInline = true;
+    video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
+    video.addEventListener('playing', function () { video.classList.add('is-playing'); vToggle.classList.add('is-ready'); needsTap(false); setIcon(true); });
+    video.addEventListener('pause', function () { setIcon(false); });
     vToggle.addEventListener('click', function () {
-      var use = $('use', vToggle);
-      if (video.paused) { video.play(); use.setAttribute('href', '#i-pause'); vToggle.setAttribute('aria-label', 'Pausar vídeo'); delete video.dataset.userPaused; }
-      else { video.pause(); use.setAttribute('href', '#i-play'); vToggle.setAttribute('aria-label', 'Reproducir vídeo'); video.dataset.userPaused = '1'; }
+      if (video.paused) { delete video.dataset.userPaused; tryPlay(); }
+      else { video.pause(); video.dataset.userPaused = '1'; }
     });
+    if (bigPlay) bigPlay.addEventListener('click', function (e) { e.stopPropagation(); delete video.dataset.userPaused; tryPlay(); });
   }
   // se llama desde el bucle de scroll con «near» = el portal está en pantalla o a punto
   function videoNear(near) {
-    if (!videoOK) return;
-    if (near && !videoLoaded) { videoLoaded = true; video.src = (window.innerWidth < 900 || window.innerHeight < 600) && video.dataset.srcSmall ? video.dataset.srcSmall : video.dataset.src; video.load(); }
-    if (!videoLoaded || video.dataset.userPaused || near === videoOn) return;
-    videoOn = near;
-    if (near) { var pr = video.play(); if (pr && pr.catch) pr.catch(function () { videoOn = false; }); } else video.pause();
+    if (!video) return;
+    portalNear = near;
+    if (near) {
+      if (autoOK) loadVideo();
+      if (video.dataset.userPaused || videoOn) return;
+      if (autoOK && !blocked) { videoOn = true; tryPlay(); }
+      else needsTap(true);
+    } else if (videoOn) { videoOn = false; video.pause(); }
   }
 
   /* ---------- Contadores (van con el scroll, no dependen de avisos de visibilidad) ---------- */
