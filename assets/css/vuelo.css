@@ -682,7 +682,7 @@ svg use { pointer-events: none; }
   .glass, .ticket, .depth__dial, .site-header.is-solid, .mobile-bar, .mobile-menu {
     -webkit-backdrop-filter: none; backdrop-filter: none;
   }
-  .glass, .ticket, .depth__dial { background: rgba(10, 19, 42, .8); }
+  .glass, .ticket:not(.ticket--main), .depth__dial { background: rgba(10, 19, 42, .8); }
   .site-header.is-solid, .mobile-bar { background: rgba(8, 15, 33, .92); }
 }
 

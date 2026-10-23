@@ -182,13 +182,16 @@
     if (tickets.length && !reduce.matches) {
       for (var j = 0; j < tickets.length; j++) {
         var tm = ticketM[j];
-        var off = (tm.top - ss + tm.h / 2 - vh / 2) / (vh / 2 + tm.h / 2); // -1 arriba, 0 centro, 1 abajo
-        if (Math.abs(off) > 1.4) continue;
-        var e = clamp((Math.abs(off) - 0.3) / 0.7, 0, 1);
+        // quieta mientras se ve entera; se desliza según la parte que ya ha salido de la pantalla
+        var top = tm.top - ss, bottom = top + tm.h;
+        if (bottom < -vh || top > vh * 2) continue;
+        var margin = Math.min(60, vh * 0.06);
+        var out = Math.max(0, margin - top, bottom - (vh - margin)) / tm.h;
+        var e = clamp(out / 0.75, 0, 1);
         e = e * e * (3 - 2 * e);
         var side = SIDES[j % SIDES.length];
-        tickets[j].style.transform = 'translate3d(' + (side * e * vw * 0.65).toFixed(1) + 'px,0,0) rotateY(' + (side * e * -28).toFixed(2) + 'deg) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))';
-        tickets[j].style.opacity = (1 - e * 0.85).toFixed(3);
+        tickets[j].style.transform = 'translate3d(' + (side * e * vw * 0.7).toFixed(1) + 'px,0,0) rotateY(' + (side * e * -16).toFixed(2) + 'deg) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))';
+        tickets[j].style.opacity = (1 - e * 0.9).toFixed(3);
       }
     }
 
