@@ -94,41 +94,53 @@
   var alti = $('.altimeter'), altiLinks = $$('.altimeter a'), altiRail = $('.altimeter__rail');
   var legTargets = altiLinks.map(function (a) { return $(a.getAttribute('href')); });
 
-  var vh = window.innerHeight, trackW = 0;
+  /* Medidas: se toman al cargar y al cambiar el tamaño, nunca en cada fotograma */
+  var vh = window.innerHeight, vw = window.innerWidth, trackW = 0, M = {}, placeC = [], placeImgs = [], ticketM = [], legTops = [], railH = 0;
+  function absTop(el) { var r = el.getBoundingClientRect(); return { top: r.top + window.scrollY, h: r.height }; }
   function layout() {
-    vh = window.innerHeight;
+    vh = window.innerHeight; vw = window.innerWidth;
+    [['portal', portal], ['lema', lema], ['depth', depth], ['saying', saying], ['places', places], ['pilot', pilotPhoto], ['route', route], ['landing', landing]]
+      .forEach(function (p) { if (p[1]) M[p[0]] = absTop(p[1]); });
     if (places && track) {
       trackW = track.scrollWidth;
-      var extra = Math.max(0, trackW - window.innerWidth);
-      places.style.setProperty('--h', (vh + extra * 1.1) + 'px');
+      places.style.setProperty('--h', (vh + Math.max(0, trackW - vw) * 1.1) + 'px');
+      M.places = absTop(places);
+      placeC = placeEls.map(function (el) { return el.offsetLeft + el.offsetWidth / 2; });
+      placeImgs = placeEls.map(function (el) { return el.querySelector('img'); });
     }
+    ticketM = tickets.map(function (el) {
+      var t = el.style.transform; el.style.transform = 'none';
+      var m = absTop(el); el.style.transform = t; return m;
+    });
+    legTops = legTargets.map(function (t) { return t ? absTop(t).top : 0; });
+    railH = altiRail ? altiRail.clientHeight : 0;
   }
-
-  // progreso 0..1 de una sección «pegada» (alto mayor que la pantalla)
-  function pinned(el) {
-    var r = el.getBoundingClientRect();
-    return clamp(-r.top / Math.max(1, r.height - vh), 0, 1);
-  }
+  // progreso 0..1 de una sección «pegada» (más alta que la pantalla)
+  function pinned(m, y) { return m ? clamp((y - m.top) / Math.max(1, m.h - vh), 0, 1) : 0; }
   // progreso 0..1 mientras una sección cruza la pantalla
-  function passing(el) {
-    var r = el.getBoundingClientRect();
-    return clamp((vh - r.top) / (vh + r.height), 0, 1);
-  }
+  function passing(m, y) { return m ? clamp((y + vh - m.top) / (vh + m.h), 0, 1) : 0; }
 
-  var lemaStep = -1;
-  function update() {
-    ticking = false;
+  var lemaStep = -1, litCount = -1, legCur = -1, routeOn = -1;
+  var ss = window.scrollY; // scroll suavizado (inercia ligera)
+  var last = performance.now(), running = false;
+
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
     var sy = window.scrollY;
+    var k = reduce.matches ? 1 : 1 - Math.exp(-dt * 13);
+    ss += (sy - ss) * k;
+    if (Math.abs(sy - ss) < 0.2) ss = sy;
+
     root.classList.toggle('is-flying', sy > vh * 0.6);
 
     if (portal) {
-      var pp = pinned(portal);
+      var pp = pinned(M.portal, sy);
       portal.style.setProperty('--p', smooth(clamp(pp / 0.55, 0, 1)).toFixed(4));
       portal.style.setProperty('--t', clamp((pp - 0.5) / 0.25, 0, 1).toFixed(3));
     }
 
     if (lema) {
-      var lp = pinned(lema);
+      var lp = pinned(M.lema, sy);
       lemaMeter.style.setProperty('--p', lp.toFixed(4));
       var step = Math.min(lemaSteps.length - 1, Math.floor(lp * lemaSteps.length * 0.999));
       if (step !== lemaStep) {
@@ -140,81 +152,83 @@
     }
 
     if (depth) {
-      var dp = passing(depth);
+      var dp = passing(M.depth, ss);
       depth.style.setProperty('--d', ((dp - 0.5) * 2).toFixed(3));
       depth.style.setProperty('--a', smooth(clamp((dp - 0.2) / 0.35, 0, 1)).toFixed(3));
     }
 
     if (saying && words.length) {
-      var sp = clamp((passing(saying) - 0.2) / 0.45, 0, 1);
-      var lit = Math.round(sp * words.length);
-      words.forEach(function (w, i) { w.classList.toggle('is-lit', i < lit); });
+      var lit = Math.round(clamp((passing(M.saying, sy) - 0.2) / 0.45, 0, 1) * words.length);
+      if (lit !== litCount) { litCount = lit; words.forEach(function (w, i) { w.classList.toggle('is-lit', i < lit); }); }
     }
 
     if (places && track) {
-      var plp = pinned(places);
-      var shift = Math.max(0, trackW - window.innerWidth) * plp;
-      track.style.transform = 'translate3d(' + (-shift).toFixed(1) + 'px,0,0)';
+      var shift = Math.max(0, trackW - vw) * pinned(M.places, ss);
+      track.style.transform = 'translate3d(' + (-shift).toFixed(2) + 'px,0,0)';
       if (!reduce.matches) {
-        var cx = window.innerWidth / 2;
-        placeEls.forEach(function (el) {
-          var r = el.getBoundingClientRect();
-          var dx = (r.left + r.width / 2 - cx) / window.innerWidth; // -1..1
-          el.style.setProperty('--ry', clamp(dx * -38, -30, 30).toFixed(2) + 'deg');
-          el.style.setProperty('--tz', (-Math.abs(dx) * 160).toFixed(1) + 'px');
-          el.style.setProperty('--px', (dx * -6).toFixed(2) + '%');
-        });
+        for (var i = 0; i < placeEls.length; i++) {
+          var dx = (placeC[i] - shift - vw / 2) / vw;
+          if (Math.abs(dx) > 1.2) continue;
+          placeEls[i].style.transform = 'rotateY(' + clamp(dx * -38, -30, 30).toFixed(2) + 'deg) translateZ(' + (-Math.abs(dx) * 160).toFixed(1) + 'px)';
+          if (placeImgs[i]) placeImgs[i].style.transform = 'scale(1.12) translate3d(' + (dx * -6).toFixed(2) + '%,0,0)';
+        }
       }
     }
 
-    if (pilotPhoto) pilotPhoto.style.setProperty('--d', passing(pilotPhoto).toFixed(3));
+    if (pilotPhoto) pilotPhoto.style.setProperty('--d', passing(M.pilot, ss).toFixed(3));
 
-    // Tarjetas de vuelos: salen hacia un lado al alejarse del centro de la pantalla,
-    // tanto por arriba como por abajo, así que funciona al bajar y al subir
+    // Tarjetas de vuelos: se van a un lado al alejarse del centro de la pantalla,
+    // por arriba y por abajo, así que funciona igual al bajar y al subir
     if (tickets.length && !reduce.matches) {
-      var vw = window.innerWidth;
-      tickets.forEach(function (el, i) {
-        var r = el.getBoundingClientRect();
-        var off = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2); // -1 arriba, 0 centro, 1 abajo
+      for (var j = 0; j < tickets.length; j++) {
+        var tm = ticketM[j];
+        var off = (tm.top - ss + tm.h / 2 - vh / 2) / (vh / 2 + tm.h / 2); // -1 arriba, 0 centro, 1 abajo
+        if (Math.abs(off) > 1.4) continue;
         var e = clamp((Math.abs(off) - 0.3) / 0.7, 0, 1);
         e = e * e * (3 - 2 * e);
-        var side = SIDES[i % SIDES.length];
-        el.style.setProperty('--sx', (side * e * vw * 0.65).toFixed(1) + 'px');
-        el.style.setProperty('--sr', (side * e * -28).toFixed(2) + 'deg');
-        el.style.setProperty('--so', (1 - e * 0.85).toFixed(3));
-      });
+        var side = SIDES[j % SIDES.length];
+        tickets[j].style.transform = 'translate3d(' + (side * e * vw * 0.65).toFixed(1) + 'px,0,0) rotateY(' + (side * e * -28).toFixed(2) + 'deg) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))';
+        tickets[j].style.opacity = (1 - e * 0.85).toFixed(3);
+      }
     }
 
     if (route) {
-      var rp = clamp((passing(route) - 0.22) / 0.4, 0, 1);
+      var rp = clamp((passing(M.route, ss) - 0.22) / 0.4, 0, 1);
       route.style.setProperty('--p', rp.toFixed(4));
-      routeSteps.forEach(function (li, i) { li.classList.toggle('is-on', rp >= i / routeSteps.length + 0.02 || rp === 1); });
+      var on = rp === 1 ? routeSteps.length : Math.floor(rp * routeSteps.length + 0.98 - 0.02);
+      if (on !== routeOn) { routeOn = on; routeSteps.forEach(function (li, i) { li.classList.toggle('is-on', i < on); }); }
     }
 
-    if (landing) {
-      var lr = landing.getBoundingClientRect();
-      var l = clamp(lr.top / (vh * 0.85), 0, 1);
+    if (landing && M.landing) {
+      var l = clamp((M.landing.top - ss) / (vh * 0.85), 0, 1);
       landing.style.setProperty('--l', (reduce.matches ? 0 : smooth(l)).toFixed(4));
     }
 
     if (alti) {
       var total = doc.documentElement.scrollHeight - vh;
-      var gp = clamp(sy / Math.max(1, total), 0, 1);
+      var gp = clamp(ss / Math.max(1, total), 0, 1);
       alti.style.setProperty('--p', gp.toFixed(4));
-      altiRail.style.setProperty('--y', (gp * altiRail.clientHeight).toFixed(1) + 'px');
+      altiRail.style.setProperty('--y', (gp * railH).toFixed(1) + 'px');
       var cur = 0;
-      legTargets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top < vh * 0.5) cur = i; });
-      altiLinks.forEach(function (a, i) {
-        a.classList.toggle('is-current', i === cur);
-        if (i === cur) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
-      });
+      legTops.forEach(function (t, i) { if (t - sy < vh * 0.5) cur = i; });
+      if (cur !== legCur) {
+        legCur = cur;
+        altiLinks.forEach(function (a, i) {
+          a.classList.toggle('is-current', i === cur);
+          if (i === cur) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+        });
+      }
     }
-  }
 
-  var ticking = false;
-  function request() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
-  layout(); update();
+    // sigue animando mientras el valor suavizado no haya alcanzado al scroll real
+    if (ss !== sy) requestAnimationFrame(frame); else running = false;
+  }
+  function request() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  layout(); request();
   window.addEventListener('scroll', request, { passive: true });
   window.addEventListener('resize', function () { layout(); request(); }, { passive: true });
   window.addEventListener('load', function () { layout(); request(); });
+  if ('ResizeObserver' in window) {
+    var rt; new ResizeObserver(function () { clearTimeout(rt); rt = setTimeout(function () { layout(); request(); }, 150); }).observe(doc.body);
+  }
 })();

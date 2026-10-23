@@ -341,8 +341,8 @@ svg use { pointer-events: none; }
 .places__head .h2 { font-size: var(--t-3); max-width: 15ch; }
 .places__head p { color: var(--claro-2); max-width: 30ch; margin: 0; }
 .places__track { list-style: none; margin: 0; padding: 0 var(--gutter); display: flex; gap: clamp(1rem, 2.4vw, 2rem); width: max-content; perspective: 1600px; will-change: transform; }
-.place { position: relative; width: clamp(240px, 30vw, 420px); aspect-ratio: 4 / 5; border-radius: var(--r-l); overflow: hidden; margin: 0; flex: none; transform: rotateY(var(--ry, 0deg)) translateZ(var(--tz, 0px)); transition: transform .12s linear; box-shadow: 0 40px 70px -30px rgba(4, 10, 24, .6); background: var(--deep); }
-.place img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12) translateX(var(--px, 0)); }
+.place { position: relative; width: clamp(240px, 30vw, 420px); aspect-ratio: 4 / 5; border-radius: var(--r-l); overflow: hidden; margin: 0; flex: none; box-shadow: 0 40px 70px -30px rgba(4, 10, 24, .6); background: var(--deep); }
+.place img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); }
 .place span { position: absolute; left: 0; right: 0; bottom: 0; padding: 3rem 1.2rem 1.1rem; font-weight: 700; background: linear-gradient(transparent, rgba(6, 12, 28, .8)); }
 .place--more { background: var(--vela); color: var(--tinta); }
 .place--more a { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.6rem; text-decoration: none; }
@@ -397,12 +397,11 @@ svg use { pointer-events: none; }
   position: relative; display: flex; flex-direction: column; padding: 1.8rem;
   border-radius: var(--r-l); background: var(--vidrio); border: 1px solid var(--filo);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-  /* --sx/--sr/--so: entrada y salida lateral ligada al scroll (vuelo.js); --rx/--ry: inclinación con el ratón (main.js) */
-  transform: translate3d(var(--sx, 0px), 0, 0) rotateY(var(--sr, 0deg)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d;
-  opacity: var(--so, 1);
-  transition: transform .45s var(--ease-out), opacity .3s ease;
+  /* vuelo.js mueve la tarjeta a los lados con el scroll; --rx/--ry: inclinación con el ratón (main.js) */
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d;
+  will-change: transform, opacity;
 }
-.ticket.is-tilting { transition: transform .08s linear; }
+
 .ticket::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, .14), transparent 45%); opacity: 0; transition: opacity .3s ease; }
 .ticket.is-tilting::after { opacity: 1; }
 .ticket__time { font-size: var(--t-1); font-weight: 650; margin-bottom: .2rem; transform: translateZ(30px); }
@@ -676,3 +675,17 @@ svg use { pointer-events: none; }
   main .wrap, .lema__sticky { width: min(100% - 2 * var(--gutter) - 230px, var(--maxw)); }
   .places__track { padding-right: 260px; }
 }
+
+/* Rendimiento en móvil y tableta: el desenfoque de fondo sobre un cielo que se mueve
+   se recalcula en cada fotograma; se sustituye por un fondo sólido translúcido */
+@media (max-width: 1099px) {
+  .glass, .ticket, .depth__dial, .site-header.is-solid, .mobile-bar, .mobile-menu {
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .glass, .ticket, .depth__dial { background: rgba(10, 19, 42, .8); }
+  .site-header.is-solid, .mobile-bar { background: rgba(8, 15, 33, .92); }
+}
+
+/* Nada ensancha la página: las tarjetas que salen por los lados se recortan */
+html, body { max-width: 100%; }
+main, .site-footer, .flights, .experience, .pilot, .contact, .booking { overflow-x: clip; }
