@@ -324,7 +324,7 @@ svg use { pointer-events: none; }
   .experience__grid { grid-template-columns: 1fr; }
   .depth { max-width: 520px; width: 100%; margin-inline: auto; }
 }
-@media (max-width: 600px) { .features { grid-template-columns: 1fr; } .depth__dial { width: 56%; } }
+@media (max-width: 600px) { .features { grid-template-columns: 1fr; } .depth__dial { width: 44%; left: 0; bottom: -4%; padding: .8rem .9rem .9rem; } .depth__dial b { font-size: var(--t-2); } }
 
 /* La frase del piloto */
 .saying { padding: clamp(5rem, 16vh, 12rem) 0; }

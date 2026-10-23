@@ -47,14 +47,8 @@
   var video = $('.portal__video');
   var vToggle = $('.video-toggle');
   var slow = (function () { var c = navigator.connection; return !!(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ''))); })();
-  if (video && !reduce.matches && !slow && 'IntersectionObserver' in window) {
-    var loaded = false;
-    new IntersectionObserver(function (en) {
-      var on = en[0].isIntersecting;
-      if (on && !loaded) { loaded = true; video.src = video.dataset.src; video.load(); }
-      if (!loaded || video.dataset.userPaused) return;
-      if (on) { var p = video.play(); if (p && p.catch) p.catch(function () {}); } else video.pause();
-    }, { rootMargin: '300px 0px' }).observe(portal);
+  var videoOK = !!(video && !reduce.matches && !slow), videoLoaded = false, videoOn = false;
+  if (videoOK) {
     video.addEventListener('playing', function () { video.classList.add('is-playing'); vToggle.classList.add('is-ready'); }, { once: true });
     vToggle.addEventListener('click', function () {
       var use = $('use', vToggle);
@@ -62,23 +56,23 @@
       else { video.pause(); use.setAttribute('href', '#i-play'); vToggle.setAttribute('aria-label', 'Reproducir vídeo'); video.dataset.userPaused = '1'; }
     });
   }
+  // se llama desde el bucle de scroll con «near» = el portal está en pantalla o a punto
+  function videoNear(near) {
+    if (!videoOK) return;
+    if (near && !videoLoaded) { videoLoaded = true; video.src = video.dataset.src; video.load(); }
+    if (!videoLoaded || video.dataset.userPaused || near === videoOn) return;
+    videoOn = near;
+    if (near) { var pr = video.play(); if (pr && pr.catch) pr.catch(function () { videoOn = false; }); } else video.pause();
+  }
 
-  /* ---------- Contadores ---------- */
-  var counters = $$('[data-count]');
-  if ('IntersectionObserver' in window && !reduce.matches) {
-    var cio = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        cio.unobserve(en.target);
-        var el = en.target, end = parseInt(el.dataset.count, 10), t0 = performance.now(), dur = 1600;
-        (function tick(now) {
-          var t = clamp((now - t0) / dur, 0, 1), e = 1 - Math.pow(1 - t, 4);
-          el.textContent = Math.round(end * e).toLocaleString('es-ES');
-          if (t < 1) requestAnimationFrame(tick);
-        })(t0);
-      });
-    }, { threshold: 0.6 });
-    counters.forEach(function (c) { c.textContent = '0'; cio.observe(c); });
+  /* ---------- Contadores (van con el scroll, no dependen de avisos de visibilidad) ---------- */
+  var dialNum = $('.depth__dial [data-count]');
+  var hoursNum = $('.stats [data-count]');
+  var lastDial = -1, lastHours = -1;
+  function setCount(el, v, prev) {
+    if (!el || v === prev) return prev;
+    el.textContent = String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return v;
   }
 
   /* ---------- Elementos que dependen del scroll ---------- */
@@ -137,6 +131,7 @@
       var pp = pinned(M.portal, sy);
       portal.style.setProperty('--p', smooth(clamp(pp / 0.55, 0, 1)).toFixed(4));
       portal.style.setProperty('--t', clamp((pp - 0.5) / 0.25, 0, 1).toFixed(3));
+      videoNear(M.portal && sy + vh * 1.5 > M.portal.top && sy < M.portal.top + M.portal.h + vh * 0.5);
     }
 
     if (lema) {
@@ -154,7 +149,9 @@
     if (depth) {
       var dp = passing(M.depth, ss);
       depth.style.setProperty('--d', ((dp - 0.5) * 2).toFixed(3));
-      depth.style.setProperty('--a', smooth(clamp((dp - 0.2) / 0.35, 0, 1)).toFixed(3));
+      var arc = smooth(clamp((dp - 0.2) / 0.35, 0, 1));
+      depth.style.setProperty('--a', arc.toFixed(3));
+      lastDial = setCount(dialNum, reduce.matches ? 180 : Math.round(180 * arc), lastDial);
     }
 
     if (saying && words.length) {
@@ -175,7 +172,12 @@
       }
     }
 
-    if (pilotPhoto) pilotPhoto.style.setProperty('--d', passing(M.pilot, ss).toFixed(3));
+    if (pilotPhoto) {
+      var pd = passing(M.pilot, ss);
+      pilotPhoto.style.setProperty('--d', pd.toFixed(3));
+      var hp = smooth(clamp((pd - 0.12) / 0.3, 0, 1));
+      lastHours = setCount(hoursNum, reduce.matches ? 1500 : Math.round(1500 * hp / 10) * 10, lastHours);
+    }
 
     // Tarjetas de vuelos: se van a un lado al alejarse del centro de la pantalla,
     // por arriba y por abajo, así que funciona igual al bajar y al subir
