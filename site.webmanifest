@@ -2,7 +2,7 @@
   "name": "Al Vuelo La Rioja",
   "short_name": "Al Vuelo",
   "lang": "es",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0a1c2d",
   "theme_color": "#0a1c2d",
