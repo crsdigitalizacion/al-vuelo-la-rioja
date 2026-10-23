@@ -23,6 +23,22 @@ assets/fonts/                  Instrument Serif y Manrope, autoalojadas
 .htaccess, robots.txt, sitemap.xml, site.webmanifest, favicon.svg
 ```
 
+## Portada en 3D (rama `rediseno-3d`)
+
+La portada (`index.html`) es un vuelo continuo de amanecer a ocaso. Archivos nuevos:
+
+```
+assets/css/vuelo.css   Estilos de la portada (tokens de color al principio). Las demás páginas siguen con styles.css
+assets/js/sky3d.js     Cielo 3D en WebGL puro, sin librerías: sierras, mar de nubes y la vela amarilla y carmesí.
+                       La luz, la altitud y la posición de la vela de cada sección están en SCENES
+                       (cada sección lleva data-scene="...")
+assets/js/vuelo.js     Efectos de scroll: título letra a letra, vídeo que se abre, «Ven, siéntate y vuela»,
+                       lugares en 3D, ruta de los pasos, aterrizaje y altímetro lateral
+```
+
+`main.js`, `config.js` y `chat.js` se reutilizan sin cambios (menú, reserva, WhatsApp y asistente).
+Sin WebGL se ve un degradado de cielo; con «reducir movimiento» activado no hay animaciones de desplazamiento.
+
 ## Vista previa online
 
 La web se puede ver en GitHub Pages: https://crsdigitalizacion.github.io/al-vuelo-la-rioja/

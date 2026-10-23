@@ -6,7 +6,7 @@
   <title>Parapente biplaza en La Rioja · Vuelos en paratrike en Logroño | Al Vuelo La Rioja</title>
   <meta name="description" content="Vuela en parapente biplaza a motor (paratrike) en Logroño, La Rioja. Vuelos de 20 y 40 minutos, vuelos a la carta y vales regalo. Sin experiencia previa. Reservas: 629 30 90 90.">
   <link rel="canonical" href="https://www.alvuelolarioja.com/">
-  <meta name="theme-color" content="#0a1c2d">
+  <meta name="theme-color" content="#0b1a35">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
   <meta property="og:type" content="website">
@@ -26,12 +26,9 @@
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
 
-  <link rel="preload" href="assets/fonts/instrument-serif-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/manrope-var.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" as="image" href="assets/img/hero-poster-m-608.webp" media="(max-width: 700px)" fetchpriority="high">
-  <link rel="preload" as="image" imagesrcset="assets/img/hero-poster-768.webp 768w, assets/img/hero-poster-1280.webp 1280w, assets/img/hero-poster-1920.webp 1920w" imagesizes="100vw" media="(min-width: 701px)" fetchpriority="high">
-  <link rel="stylesheet" href="assets/css/styles.css?v=13">
-  <script>document.documentElement.classList.remove('no-js');if(/github\.io$/.test(location.hostname)){var m=document.createElement('meta');m.name='robots';m.content='noindex, nofollow';document.head.appendChild(m);}</script>
+  <link rel="stylesheet" href="assets/css/vuelo.css?v=1">
+  <script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');setTimeout(function(){document.documentElement.classList.add('is-loaded');},3500);if(/github\.io$/.test(location.hostname)){var m=document.createElement('meta');m.name='robots';m.content='noindex, nofollow';document.head.appendChild(m);}</script>
 
   <script type="application/ld+json">
   {
@@ -97,6 +94,11 @@
   </defs>
 </svg>
 
+<!-- Cielo 3D de fondo (assets/js/sky3d.js) -->
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="sky-fallback" aria-hidden="true"></div>
+<div class="sky-scrim" aria-hidden="true"></div>
+
 <header class="site-header" id="top">
   <div class="wrap">
     <a class="brand" href="#inicio" aria-label="Al Vuelo La Rioja, inicio">
@@ -105,7 +107,6 @@
     </a>
     <nav class="nav" aria-label="Principal">
       <ul>
-        <li><a href="#inicio">Inicio</a></li>
         <li><a href="#experiencia">La experiencia</a></li>
         <li><a href="vuelos.html">Vuelos</a></li>
         <li><a href="galeria.html">Galería</a></li>
@@ -115,7 +116,7 @@
     </nav>
     <div class="header-actions">
       <a class="header-phone" href="tel:+34629309090"><svg aria-hidden="true"><use href="#i-phone"/></svg>629 30 90 90</a>
-      <a class="btn btn--sm header-cta" href="#reserva" data-magnetic>Reserva tu vuelo</a>
+      <a class="btn btn--sm header-cta" href="#reserva">Reserva tu vuelo</a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú"><span></span></button>
     </div>
   </div>
@@ -131,257 +132,262 @@
     <li><a href="#contacto">Contacto</a></li>
   </ol>
   <div class="mobile-menu__foot">
-    <a class="btn btn--block" href="#reserva">Reserva tu vuelo <svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-    <a class="contact-line" href="tel:+34629309090"><svg aria-hidden="true"><use href="#i-phone"/></svg>629 30 90 90 · Miguel Ángel</a>
+    <a class="btn btn--block" href="#reserva">Reserva tu vuelo</a>
+    <a class="contact-line" href="tel:+34629309090"><svg aria-hidden="true"><use href="#i-phone"/></svg>629 30 90 90 (Miguel Ángel)</a>
     <a class="contact-line" href="mailto:info@alvuelolarioja.com"><svg aria-hidden="true"><use href="#i-mail"/></svg>info@alvuelolarioja.com</a>
   </div>
 </div>
 
+<!-- Altímetro: progreso del vuelo y acceso a cada tramo -->
+<nav class="altimeter" aria-label="Tramos del vuelo">
+  <div class="altimeter__rail" aria-hidden="true"><i class="altimeter__fill"></i><b class="altimeter__glider"><svg viewBox="0 0 24 24"><path d="M2 9.5C6 5 18 5 22 9.5l-1.3 1.2C16.6 7.6 7.4 7.6 3.3 10.7Z"/><path d="M12 9v7M8.5 10.2 11.4 16M15.5 10.2 12.6 16M10 16h4l-.6 2.2h-2.8Z" fill="none" stroke="currentColor" stroke-width="1.1"/></svg></b></div>
+  <ol>
+    <li><a href="#inicio" data-leg="0">Despegue</a></li>
+    <li><a href="#ven" data-leg="1">Ascenso</a></li>
+    <li><a href="#lugares" data-leg="2">Crucero</a></li>
+    <li><a href="#vuelos-precios" data-leg="3">Descenso</a></li>
+    <li><a href="#reserva" data-leg="4">Aterrizaje</a></li>
+  </ol>
+</nav>
+
 <main id="main">
 
-  <!-- HERO -->
-  <section class="hero" id="inicio" aria-labelledby="hero-title">
-    <div class="hero__media" data-depth="-14">
-      <picture>
-        <source media="(max-width: 700px)" srcset="assets/img/hero-poster-m-608.webp">
-        <img src="assets/img/hero-poster-1280.webp"
-             srcset="assets/img/hero-poster-768.webp 768w, assets/img/hero-poster-1280.webp 1280w, assets/img/hero-poster-1920.webp 1920w"
-             sizes="100vw" width="1920" height="1080" alt="" fetchpriority="high" decoding="async">
-      </picture>
-      <video class="hero__video" muted playsinline loop preload="none" aria-hidden="true"
-             data-src-large="assets/video/hero-vuelo-noja-720.mp4"
-             data-src-small="assets/video/hero-vuelo-noja-720.mp4"></video>
-    </div>
-    <div class="hero__grade" aria-hidden="true"></div>
-    <div class="hero__haze" data-depth="22" aria-hidden="true"></div>
-
-    <div class="hero__inner" data-tilt-hero>
-      <p class="eyebrow hero__eyebrow">Parapente biplaza a motor · Logroño</p>
-      <h1 id="hero-title">
-        <span class="split-line"><span>La Rioja</span></span>
-        <span class="split-line"><span style="--d:.12s">desde <em>otra</em></span></span>
-        <span class="split-line"><span style="--d:.24s"><em>perspectiva</em></span></span>
+  <!-- DESPEGUE -->
+  <section class="hero" id="inicio" data-scene="despegue" aria-labelledby="hero-title">
+    <div class="wrap hero__inner">
+      <p class="hero__kicker" data-intro style="--i:0">Parapente biplaza a motor en Logroño</p>
+      <h1 id="hero-title" class="hero__title" aria-label="La Rioja desde otra perspectiva">
+        <span class="hero__line" aria-hidden="true" data-chars>La Rioja</span>
+        <span class="hero__line" aria-hidden="true" data-chars>desde otra</span>
+        <span class="hero__line" aria-hidden="true" data-chars>perspectiva</span>
       </h1>
-      <p class="hero__sub reveal" style="--d:.45s">Despega desde un terreno llano, siéntate detrás del piloto y deja que el paisaje se abra bajo tus pies.<span class="hide-sm"> Sin cursos, sin preparación física: solo tienes que venir, sentarte y volar.</span></p>
-      <div class="hero__ctas reveal" style="--d:.6s">
-        <a class="btn" href="#reserva" data-magnetic>Reserva tu vuelo <svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      <p class="hero__sub" data-intro style="--i:3">Despega desde un terreno llano, siéntate detrás del piloto y deja que el paisaje se abra bajo tus pies. Sin cursos, sin preparación física: solo tienes que venir, sentarte y volar.</p>
+      <div class="hero__ctas" data-intro style="--i:4">
+        <a class="btn" href="#reserva">Reserva tu vuelo</a>
         <a class="btn btn--ghost" href="#experiencia">Descubre la experiencia</a>
       </div>
-      <ul class="hero__facts reveal" style="--d:.75s">
-        <li><svg aria-hidden="true"><use href="#i-clock"/></svg><span>Vuelos de <strong>20 y 40 min</strong></span></li>
-        <li><svg aria-hidden="true"><use href="#i-pin"/></svg><span>Inmediaciones de <strong>Logroño</strong></span></li>
-        <li><svg aria-hidden="true"><use href="#i-award"/></svg><span>Turismo La Rioja <strong>TA-LR-32</strong></span></li>
+      <dl class="hero__facts" data-intro style="--i:5">
+        <div><dt>Duración</dt><dd>20 y 40 min</dd></div>
+        <div><dt>Zona de vuelo</dt><dd>Inmediaciones de Logroño</dd></div>
+        <div><dt>Turismo La Rioja</dt><dd>TA-LR-32</dd></div>
+      </dl>
+    </div>
+    <p class="hero__coords" aria-hidden="true">42°28′ N &nbsp; 2°27′ O</p>
+    <a class="scroll-cue" href="#a-bordo"><span>Desliza para despegar</span><i aria-hidden="true"></i></a>
+  </section>
+
+  <!-- PORTAL: el vídeo real se abre al hacer scroll -->
+  <section class="portal" id="a-bordo" data-scene="portal" aria-labelledby="portal-title">
+    <div class="portal__sticky">
+      <div class="portal__window">
+        <img class="portal__poster" src="assets/img/hero-poster-1280.webp" srcset="assets/img/hero-poster-768.webp 768w, assets/img/hero-poster-1280.webp 1280w, assets/img/hero-poster-1920.webp 1920w" sizes="100vw" width="1920" height="1080" alt="" decoding="async" loading="lazy">
+        <video class="portal__video" muted playsinline loop preload="none" aria-hidden="true" data-src="assets/video/hero-vuelo-noja-720.mp4"></video>
+        <div class="portal__shade" aria-hidden="true"></div>
+      </div>
+      <div class="portal__text">
+        <h2 id="portal-title" class="portal__title">Sin ventanillas entre tú y el paisaje</h2>
+        <p>Así se ve desde el paratrike: 180º de visión y el piloto a tu lado por el intercomunicador. <span class="portal__credit">Vuelo de Miguel Ángel sobre la playa de Noja (Cantabria).</span></p>
+      </div>
+      <button class="video-toggle" type="button" aria-label="Pausar vídeo"><svg aria-hidden="true"><use href="#i-pause"/></svg></button>
+    </div>
+  </section>
+
+  <!-- ASCENSO: ven, siéntate y vuela -->
+  <section class="lema" id="ven" data-scene="lema" aria-labelledby="lema-title">
+    <h2 class="visually-hidden" id="lema-title">Ven, siéntate y vuela</h2>
+    <div class="lema__sticky">
+      <div class="lema__cards" aria-hidden="true">
+        <figure class="lema__card" data-step="0"><img src="assets/img/piloto-paratrike-1200.webp" srcset="assets/img/piloto-paratrike-640.webp 640w, assets/img/piloto-paratrike-1200.webp 1200w" sizes="(min-width: 900px) 46vw, 88vw" width="1200" height="800" loading="lazy" decoding="async" alt=""></figure>
+        <figure class="lema__card" data-step="1"><img src="assets/img/sientate-paratrike-1280.webp" srcset="assets/img/sientate-paratrike-640.webp 640w, assets/img/sientate-paratrike-1280.webp 1280w" sizes="(min-width: 900px) 46vw, 88vw" width="1920" height="960" loading="lazy" decoding="async" alt=""></figure>
+        <figure class="lema__card" data-step="2"><img src="assets/img/vista-aerea-180-1280.webp" srcset="assets/img/vista-aerea-180-640.webp 640w, assets/img/vista-aerea-180-1280.webp 1280w" sizes="(min-width: 900px) 46vw, 88vw" width="1920" height="960" loading="lazy" decoding="async" alt=""></figure>
+      </div>
+      <ol class="lema__steps glass">
+        <li class="lema__step" data-step="0">
+          <p class="lema__word">Ven,</p>
+          <p class="lema__text">Quedamos en el lugar de salida habitual, en las inmediaciones de Logroño. El piloto te facilita casco y guantes, y te explica todo antes de despegar.</p>
+        </li>
+        <li class="lema__step" data-step="1">
+          <p class="lema__word">siéntate</p>
+          <p class="lema__text">No necesitas curso ni una condición física especial. El paratrike es un carro biplaza con motor y vela de parapente: tú solo te sientas.</p>
+        </li>
+        <li class="lema__step" data-step="2">
+          <p class="lema__word">y vuela.</p>
+          <p class="lema__text">En pocos metros de terreno llano estás en el aire. Sin ventanillas ni mamparas: La Rioja a vista de pájaro, con 180º de visión.</p>
+        </li>
+      </ol>
+      <div class="lema__meter" aria-hidden="true"><i></i></div>
+    </div>
+  </section>
+
+  <!-- LA EXPERIENCIA -->
+  <section class="experience" id="experiencia" data-scene="experiencia" aria-labelledby="exp-title">
+    <div class="wrap experience__grid">
+      <div class="experience__copy glass">
+        <h2 class="h2" id="exp-title">Parapente biplaza a motor: volar está al alcance de casi todos</h2>
+        <p>Un paratrike es exactamente un parapente biplaza, pero con un habitáculo y una hélice impulsada por motor. Ese empuje permite despegar desde prácticamente cualquier terreno llano, sin necesidad de una ladera con condiciones concretas como en el parapente tradicional.</p>
+        <p>El resultado es un vuelo estable y cómodo en el que tú solo tienes que disfrutar: ves el paisaje con libertad total, hablas con el piloto por el intercomunicador y decides con él por dónde volar.</p>
+        <ul class="features">
+          <li><svg aria-hidden="true"><use href="#i-takeoff"/></svg><div><strong>Despegue desde terreno llano</strong><span>En pocos metros estás en el aire, sin carrera ni salto.</span></div></li>
+          <li><svg aria-hidden="true"><use href="#i-eye"/></svg><div><strong>180º de visión</strong><span>Sin ventanillas ni mamparas entre tú y el paisaje.</span></div></li>
+          <li><svg aria-hidden="true"><use href="#i-headset"/></svg><div><strong>Cascos con intercomunicador</strong><span>Hablas con el piloto durante todo el vuelo.</span></div></li>
+          <li><svg aria-hidden="true"><use href="#i-access"/></svg><div><strong>Sin curso ni condición física</strong><span>Pensado para que pueda volar casi cualquier persona, también con discapacidad.</span></div></li>
+        </ul>
+        <a class="link" href="que-es-un-paratrike.html">Qué es un paratrike y cómo es el equipo</a>
+      </div>
+
+      <div class="depth" data-depth aria-hidden="true">
+        <div class="depth__layer depth__layer--back"><img src="assets/img/ala-cielo-azul-1200.webp" srcset="assets/img/ala-cielo-azul-640.webp 640w, assets/img/ala-cielo-azul-1200.webp 1200w" sizes="(min-width: 960px) 34vw, 70vw" width="1200" height="1200" loading="lazy" decoding="async" alt=""></div>
+        <div class="depth__layer depth__layer--front"><img src="assets/img/galeria/mar-de-nubes-800.webp" srcset="assets/img/galeria/mar-de-nubes-480.webp 480w, assets/img/galeria/mar-de-nubes-800.webp 800w" sizes="(min-width: 960px) 24vw, 52vw" width="800" height="600" loading="lazy" decoding="async" alt=""></div>
+        <div class="depth__dial">
+          <svg viewBox="0 0 200 110"><path class="depth__arc-bg" d="M15 100a85 85 0 0 1 170 0"/><path class="depth__arc" d="M15 100a85 85 0 0 1 170 0" pathLength="1"/></svg>
+          <p><b data-count="180">180</b>º de visión</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FRASE DEL PILOTO -->
+  <section class="saying" data-scene="experiencia" aria-label="La filosofía del vuelo">
+    <figure class="wrap">
+      <blockquote class="saying__quote" data-words>«Sobre todo, de lo que se trata es de disfrutar el vuelo, asegurar la actividad y velar por la seguridad del cliente».</blockquote>
+      <figcaption>Miguel Ángel Ordóñez, piloto de Al Vuelo La Rioja</figcaption>
+    </figure>
+  </section>
+
+  <!-- CRUCERO: lugares sobrevolados (scroll horizontal en 3D) -->
+  <section class="places" id="lugares" data-scene="lugares" aria-labelledby="lugares-title">
+    <div class="places__sticky">
+      <div class="wrap places__head">
+        <h2 class="h2" id="lugares-title">Desde arriba, todo se ve distinto</h2>
+        <p>Algunos vuelos de Miguel Ángel, en La Rioja y por toda España.</p>
+      </div>
+      <ul class="places__track">
+        <li class="place"><img src="assets/img/galeria/laguardia-alava-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Vista aérea de Laguardia"><span>Sobrevolando Laguardia</span></li>
+        <li class="place"><img src="assets/img/galeria/estadio-las-gaunas-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Estadio Las Gaunas visto desde el aire"><span>Estadio Las Gaunas (Logroño)</span></li>
+        <li class="place"><img src="assets/img/galeria/bardenas-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Paratrike sobre los barrancos de las Bardenas"><span>Bardenas</span></li>
+        <li class="place"><img src="assets/img/galeria/pantano-ortigosa-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Pantano de Ortigosa desde el paratrike"><span>Pantano de Ortigosa</span></li>
+        <li class="place"><img src="assets/img/galeria/mar-de-nubes-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Paratrike sobre un mar de nubes"><span>Sobrevolando un mar de nubes</span></li>
+        <li class="place"><img src="assets/img/galeria/cantabrico-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Vuelo sobre la costa del Cantábrico"><span>Volando sobre el Cantábrico</span></li>
+        <li class="place"><img src="assets/img/galeria/orduna-vizcaya-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Orduña vista desde el aire"><span>Orduña (Vizcaya)</span></li>
+        <li class="place"><img src="assets/img/galeria/eclipse-de-paratrike-800.webp" width="800" height="600" loading="lazy" decoding="async" alt="Silueta del paratrike frente al sol"><span>Eclipse de paratrike</span></li>
+        <li class="place place--more"><a href="galeria.html"><strong>Ver la galería completa</strong><span>22 fotos y 12 vídeos de vuelos</span></a></li>
       </ul>
     </div>
-    <p class="hero__aside" aria-hidden="true">42°28′ N · 2°27′ O · Logroño</p>
-    <button class="video-toggle" type="button" aria-label="Pausar vídeo de fondo"><svg aria-hidden="true"><use href="#i-pause"/></svg></button>
-    <a class="scroll-cue" href="#ven" aria-label="Seguir bajando"><i></i>Desliza</a>
   </section>
 
-  <!-- VEN · SIÉNTATE · Y VUELA -->
-  <section class="motto" id="ven" aria-labelledby="motto-title">
-    <h2 class="visually-hidden" id="motto-title">Ven, siéntate y vuela</h2>
-    <div class="motto__track">
-      <div class="motto__stage">
-        <div class="motto__frames">
-          <figure class="motto__frame is-active" data-step="0" style="margin:0">
-            <img src="assets/img/piloto-paratrike-1200.webp" srcset="assets/img/piloto-paratrike-640.webp 640w, assets/img/piloto-paratrike-1200.webp 1200w" sizes="100vw" width="1200" height="800" loading="lazy" decoding="async" alt="El piloto Miguel Ángel junto al paratrike preparado para despegar">
-          </figure>
-          <figure class="motto__frame" data-step="1" style="margin:0">
-            <img src="assets/img/sientate-paratrike-1280.webp" srcset="assets/img/sientate-paratrike-640.webp 640w, assets/img/sientate-paratrike-1280.webp 1280w, assets/img/sientate-paratrike-1920.webp 1920w" sizes="100vw" width="1920" height="960" loading="lazy" decoding="async" alt="Piloto y pasajero sentados en el paratrike, con casco, antes del despegue">
-          </figure>
-          <figure class="motto__frame" data-step="2" style="margin:0">
-            <img src="assets/img/vista-aerea-180-1280.webp" srcset="assets/img/vista-aerea-180-640.webp 640w, assets/img/vista-aerea-180-1280.webp 1280w, assets/img/vista-aerea-180-1920.webp 1920w" sizes="100vw" width="1920" height="960" loading="lazy" decoding="async" alt="Vista desde el paratrike en vuelo sobre campos y viñedos">
-          </figure>
-        </div>
-        <p class="motto__kicker eyebrow">El lema de la casa</p>
-        <div class="motto__content">
-          <p class="motto__words" aria-hidden="true">
-            <span class="motto__word is-active" data-step="0">Ven,</span>
-            <span class="motto__word" data-step="1">siéntate</span>
-            <span class="motto__word" data-step="2"><em>y vuela.</em></span>
-          </p>
-          <div class="motto__captions">
-            <p class="motto__caption is-active" data-step="0">Quedamos en el lugar de salida habitual, en las inmediaciones de Logroño. El piloto te facilita casco y guantes, y te explica todo antes de despegar.</p>
-            <p class="motto__caption" data-step="1">No necesitas curso ni una condición física especial. El paratrike es un carro biplaza con motor y vela de parapente: tú solo te sientas.</p>
-            <p class="motto__caption" data-step="2">En pocos metros de terreno llano estás en el aire. Sin ventanillas ni mamparas: La Rioja a vista de pájaro, con 180º de visión.</p>
-          </div>
-        </div>
-        <div class="motto__progress" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span></div>
+  <!-- TU PILOTO -->
+  <section class="pilot" id="confianza" data-scene="piloto" aria-labelledby="piloto-title">
+    <div class="wrap pilot__grid">
+      <div class="pilot__photo">
+        <img src="assets/img/piloto-con-hijo-1280.webp" srcset="assets/img/piloto-con-hijo-640.webp 640w, assets/img/piloto-con-hijo-1280.webp 1280w" sizes="(min-width: 980px) 44vw, 92vw" width="1920" height="960" loading="lazy" decoding="async" alt="El piloto Miguel Ángel Ordóñez con casco e intercomunicador junto al paratrike">
+      </div>
+      <div class="pilot__copy">
+        <h2 class="h2" id="piloto-title">Miguel Ángel Ordóñez Molina, tu piloto</h2>
+        <p>Vuela desde 1994. Se inició con siete años de vuelo libre en parapente y después se formó como piloto en la modalidad PL2, trike biplaza con motor. Acumula más de 1.500 horas de vuelo por toda España, con rutas como la costa cantábrica de Ferrol a Bilbao, por etapas.</p>
+        <dl class="stats">
+          <div><dt>Vuela desde</dt><dd>1994</dd></div>
+          <div><dt>Horas de vuelo</dt><dd>+<span data-count="1500">1.500</span></dd></div>
+          <div><dt>Licencia</dt><dd>PL2</dd></div>
+        </dl>
+        <figure class="pilot__quote">
+          <blockquote>«Lo único que tiene que hacer quien quiera volar es sentarse, disfrutar y sentir el placer de volar».</blockquote>
+        </figure>
       </div>
     </div>
-  </section>
 
-  <!-- EXPERIENCIA -->
-  <section class="section experience" id="experiencia" aria-labelledby="exp-title">
-    <div class="wrap experience__grid">
-      <div class="experience__copy">
-        <p class="eyebrow reveal">La experiencia</p>
-        <h2 class="h2" id="exp-title">
-          <span class="split-line"><span>Parapente biplaza a motor:</span></span>
-          <span class="split-line"><span style="--d:.1s"><em>volar está al alcance</em></span></span>
-          <span class="split-line"><span style="--d:.2s"><em>de casi todos</em></span></span>
-        </h2>
-        <p class="reveal">Un paratrike es exactamente un parapente biplaza, pero con un habitáculo y una hélice impulsada por motor. Ese empuje permite despegar desde prácticamente cualquier terreno llano, sin necesidad de una ladera con condiciones concretas como en el parapente tradicional.</p>
-        <p class="reveal">El resultado es un vuelo estable y cómodo en el que tú solo tienes que disfrutar: ves el paisaje con libertad total, hablas con el piloto por el intercomunicador y decides con él por dónde volar.</p>
-        <ul class="feature-list">
-          <li class="reveal"><span class="ico"><svg aria-hidden="true"><use href="#i-takeoff"/></svg></span><div><strong>Despegue desde terreno llano</strong><span>En pocos metros estás en el aire, sin carrera ni salto.</span></div></li>
-          <li class="reveal" style="--d:.06s"><span class="ico"><svg aria-hidden="true"><use href="#i-eye"/></svg></span><div><strong>180º de visión</strong><span>Sin ventanillas ni mamparas entre tú y el paisaje.</span></div></li>
-          <li class="reveal" style="--d:.12s"><span class="ico"><svg aria-hidden="true"><use href="#i-headset"/></svg></span><div><strong>Cascos con intercomunicador</strong><span>Hablas con el piloto durante todo el vuelo.</span></div></li>
-          <li class="reveal" style="--d:.18s"><span class="ico"><svg aria-hidden="true"><use href="#i-access"/></svg></span><div><strong>Sin curso ni condición física</strong><span>Pensado para que pueda volar casi cualquier persona, también con discapacidad.</span></div></li>
-        </ul>
-        <a class="link-arrow reveal" href="que-es-un-paratrike.html">Qué es un paratrike y cómo es el equipo <svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-      </div>
-
-      <div class="depth" data-parallax-group>
-        <div class="depth__back reveal-img" data-speed="-0.06">
-          <img src="assets/img/ala-cielo-azul-1200.webp" srcset="assets/img/ala-cielo-azul-640.webp 640w, assets/img/ala-cielo-azul-1200.webp 1200w" sizes="(min-width: 960px) 40vw, 90vw" width="1200" height="1200" loading="lazy" decoding="async" alt="Paratrike en vuelo bajo una vela amarilla y roja sobre un cielo azul intenso">
-        </div>
-        <div class="depth__front reveal-img" data-speed="0.08" style="--d:.15s">
-          <img src="assets/img/galeria/mar-de-nubes-800.webp" srcset="assets/img/galeria/mar-de-nubes-480.webp 480w, assets/img/galeria/mar-de-nubes-800.webp 800w" sizes="(min-width: 960px) 28vw, 60vw" width="800" height="600" loading="lazy" decoding="async" alt="Paratrike sobrevolando un mar de nubes">
-        </div>
-        <div class="depth__badge" data-speed="0.16" aria-hidden="true"><b>180º</b><span>de visión, sin ventanillas</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PANORAMA -->
-  <section class="panorama" aria-label="La filosofía del vuelo">
-    <div class="panorama__img" data-speed="-0.12">
-      <img src="assets/img/vuela-montanas-1280.webp" srcset="assets/img/vuela-montanas-640.webp 640w, assets/img/vuela-montanas-1280.webp 1280w, assets/img/vuela-montanas-1920.webp 1920w" sizes="100vw" width="1920" height="960" loading="lazy" decoding="async" alt="Vela de parapente amarilla y roja sobre las sierras al atardecer">
-    </div>
     <div class="wrap">
-      <blockquote class="reveal">
-        <p>«Sobre todo, de lo que se trata es de <em>disfrutar el vuelo</em>, asegurar la actividad y velar por la seguridad del cliente».</p>
-        <footer>Miguel Ángel Ordóñez · Piloto de Al Vuelo La Rioja</footer>
-      </blockquote>
+      <h3 class="trust__title">Por qué volar con Al Vuelo</h3>
+      <ul class="trust glass">
+        <li><svg aria-hidden="true"><use href="#i-award"/></svg><h4>Registrada en Turismo La Rioja</h4><p>Empresa inscrita en el registro de turismo activo de La Rioja con el código TA-LR-32.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-shield"/></svg><h4>Equipo homologado</h4><p>Trike, parapente y paracaídas de emergencia homologados. Titulaciones pertinentes y seguro de responsabilidad civil y de accidentes.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-headset"/></svg><h4>Acompañamiento en todo momento</h4><p>Cascos con intercomunicador para hablar con el piloto durante el vuelo y decidir juntos la ruta.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-info"/></svg><h4>Información antes de volar</h4><p>Te indicamos qué ropa llevar, el lugar de salida y las condiciones del vuelo antes de que vengas.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-phone"/></svg><h4>Atención todos los días</h4><p>Reservas y consultas de lunes a domingo, de 9:00 a 20:00 h, por teléfono o por email.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-weather"/></svg><h4>La meteorología manda</h4><p>Si el tiempo no acompaña, el vuelo se hace otro día acordado entre ambas partes. La seguridad está por delante de la ruta.</p></li>
+      </ul>
     </div>
   </section>
 
-  <!-- CONFIANZA -->
-  <section class="section" id="confianza" aria-labelledby="confianza-title">
+  <!-- DESCENSO: vuelos y precios -->
+  <section class="flights" id="vuelos-precios" data-scene="vuelos" aria-labelledby="vuelos-title">
     <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow reveal">Por qué volar con Al Vuelo</p>
-        <h2 class="h2" id="confianza-title">
-          <span class="split-line"><span>Un piloto, un equipo homologado</span></span>
-          <span class="split-line"><span style="--d:.1s">y <em>mucho cielo recorrido</em></span></span>
-        </h2>
+      <div class="flights__head">
+        <h2 class="h2" id="vuelos-title">Elige cuánto tiempo quieres estar en el aire</h2>
+        <p>Una persona por vuelo, con el piloto. El precio final se confirma al reservar.</p>
       </div>
-
-      <div class="trust__grid">
-        <div class="pilot">
-          <div class="pilot__img reveal-img">
-            <img src="assets/img/piloto-con-hijo-1280.webp" srcset="assets/img/piloto-con-hijo-640.webp 640w, assets/img/piloto-con-hijo-1280.webp 1280w" sizes="(min-width: 980px) 42vw, 92vw" width="1920" height="960" loading="lazy" decoding="async" alt="El piloto Miguel Ángel Ordóñez con casco e intercomunicador junto al paratrike">
-          </div>
-          <div class="pilot__card reveal">
-            <p class="eyebrow">Tu piloto</p>
-            <h3 class="h3" style="margin-top:.6rem">Miguel Ángel Ordóñez Molina</h3>
-            <p>Vuela desde 1994. Se inició con siete años de vuelo libre en parapente y después se formó como piloto en la modalidad PL2, trike biplaza con motor. Acumula más de 1.500 horas de vuelo por toda España, con rutas como la costa cantábrica de Ferrol a Bilbao, por etapas.</p>
-          </div>
-          <blockquote class="quote reveal">
-            <p>«Lo único que tiene que hacer quien quiera volar es sentarse, disfrutar y sentir el placer de volar».</p>
-            <footer>— Miguel Ángel Ordóñez</footer>
-          </blockquote>
-        </div>
-
-        <ul class="trust-list">
-          <li class="trust-item reveal">
-            <span class="ico"><svg aria-hidden="true"><use href="#i-award"/></svg></span>
-            <h3>Registrada en Turismo La Rioja</h3>
-            <p>Empresa inscrita en el registro de turismo activo de La Rioja con el código TA-LR-32.</p>
-          </li>
-          <li class="trust-item reveal" style="--d:.06s">
-            <span class="ico"><svg aria-hidden="true"><use href="#i-shield"/></svg></span>
-            <h3>Equipo homologado</h3>
-            <p>Trike, parapente y paracaídas de emergencia homologados. Titulaciones pertinentes y seguro de responsabilidad civil y de accidentes.</p>
-          </li>
-          <li class="trust-item reveal" style="--d:.12s">
-            <span class="ico"><svg aria-hidden="true"><use href="#i-headset"/></svg></span>
-            <h3>Acompañamiento en todo momento</h3>
-            <p>Cascos con intercomunicador para hablar con el piloto durante el vuelo y decidir juntos la ruta.</p>
-          </li>
-          <li class="trust-item reveal" style="--d:.18s">
-            <span class="ico"><svg aria-hidden="true"><use href="#i-info"/></svg></span>
-            <h3>Información antes de volar</h3>
-            <p>Te indicamos qué ropa llevar, el lugar de salida y las condiciones del vuelo antes de que vengas.</p>
-          </li>
-          <li class="trust-item reveal" style="--d:.24s">
-            <span class="ico"><svg aria-hidden="true"><use href="#i-phone"/></svg></span>
-            <h3>Atención todos los días</h3>
-            <p>Reservas y consultas de lunes a domingo, de 9:00 a 20:00 h, por teléfono o por email.</p>
-          </li>
-          <li class="trust-item reveal" style="--d:.3s">
-            <span class="ico"><svg aria-hidden="true"><use href="#i-weather"/></svg></span>
-            <h3>La meteorología manda</h3>
-            <p>Si el tiempo no acompaña, el vuelo se hace otro día acordado entre ambas partes. La seguridad está por delante de la ruta.</p>
-          </li>
-        </ul>
+      <ul class="tickets">
+        <li class="ticket" data-tilt>
+          <p class="ticket__time"><b>20</b> min</p>
+          <p class="ticket__name">Primer vuelo</p>
+          <p class="ticket__desc">La forma perfecta de descubrir qué se siente al volar en paratrike sobre los alrededores de Logroño.</p>
+          <p class="ticket__price">85 €</p>
+          <a class="btn btn--ghost btn--block" href="#reserva" data-flight="20">Reservar 20 minutos</a>
+        </li>
+        <li class="ticket ticket--main" data-tilt>
+          <p class="ticket__time"><b>40</b> min</p>
+          <p class="ticket__name">Más tiempo en el aire</p>
+          <p class="ticket__desc">El doble de tiempo en el aire para recorrer el paisaje con calma y disfrutar de cada tramo del vuelo.</p>
+          <p class="ticket__price">130 €</p>
+          <a class="btn btn--block" href="#reserva" data-flight="40">Reservar 40 minutos</a>
+        </li>
+        <li class="ticket" data-tilt>
+          <p class="ticket__time"><b>A la carta</b></p>
+          <p class="ticket__name">Tiempo y lugar a medida</p>
+          <p class="ticket__desc">Vuela el tiempo que quieras y por donde quieras: tu pueblo, un rincón especial o ese lugar que siempre has querido ver desde arriba.</p>
+          <p class="ticket__price ticket__price--soft">Presupuesto</p>
+          <a class="btn btn--ghost btn--block" href="#reserva" data-flight="carta">Pedir presupuesto</a>
+        </li>
+      </ul>
+      <div class="extras">
+        <p><svg aria-hidden="true"><use href="#i-video"/></svg><span><strong>Vídeo y fotos de tu vuelo, +15 €.</strong> Se graba con una cámara de ojo de pez de 180º y te entregamos fotografías y un vídeo editado. Durante el vuelo no se pueden llevar móviles ni cámaras.</span></p>
+        <p><svg aria-hidden="true"><use href="#i-gift"/></svg><span><strong>¿Es un regalo?</strong> El vale es para una persona y no caduca. <a href="regalo-parapente-la-rioja.html">Ver el vale regalo</a></span></p>
       </div>
     </div>
   </section>
 
   <!-- CÓMO FUNCIONA -->
-  <section class="section section--mist" id="como-funciona" aria-labelledby="pasos-title">
+  <section class="route" id="como-funciona" data-scene="pasos" aria-labelledby="pasos-title">
     <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow reveal">Cómo funciona</p>
-        <h2 class="h2" id="pasos-title">
-          <span class="split-line"><span>De la consulta</span></span>
-          <span class="split-line"><span style="--d:.1s">al <em>día del vuelo</em></span></span>
-        </h2>
+      <h2 class="h2" id="pasos-title">De la consulta al día del vuelo</h2>
+      <div class="route__body">
+        <svg class="route__path" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+          <path class="route__trail" d="M10 200 C 160 200, 200 120, 330 110 S 560 40, 680 60 S 880 20, 990 30" pathLength="1"/>
+          <path class="route__line" d="M10 200 C 160 200, 200 120, 330 110 S 560 40, 680 60 S 880 20, 990 30" pathLength="1"/>
+        </svg>
+        <ol class="route__steps glass">
+          <li><span class="route__n">1</span><h3>Elige tu experiencia</h3><p>Vuelo de 20 o 40 minutos, un vuelo a la carta o un vale para regalar.</p></li>
+          <li><span class="route__n">2</span><h3>Solicita tu reserva</h3><p>Desde el formulario, por teléfono o por email. Las salidas por día son limitadas, así que conviene reservar con unos días de antelación.</p></li>
+          <li><span class="route__n">3</span><h3>Recibe las indicaciones</h3><p>El piloto concreta contigo el día, la hora y el lugar de salida, y te dice qué llevar.</p></li>
+          <li><span class="route__n">4</span><h3>Ven, siéntate y vuela</h3><p>Normalmente a primera hora de la mañana o a última de la tarde, siempre sujeto a la meteorología y a las condiciones de vuelo.</p></li>
+        </ol>
       </div>
-      <ol class="steps" style="list-style:none;margin:0;padding:0">
-        <li class="step reveal">
-          <h3>Elige tu experiencia</h3>
-          <p>Vuelo de 20 o 40 minutos, un vuelo a la carta o un vale para regalar.</p>
-        </li>
-        <li class="step reveal" style="--d:.08s">
-          <h3>Solicita tu reserva</h3>
-          <p>Desde el formulario, por teléfono o por email. Las salidas por día son limitadas, así que conviene reservar con unos días de antelación.</p>
-        </li>
-        <li class="step reveal" style="--d:.16s">
-          <h3>Recibe las indicaciones</h3>
-          <p>El piloto concreta contigo el día, la hora y el lugar de salida, y te dice qué llevar.</p>
-        </li>
-        <li class="step reveal" style="--d:.24s">
-          <h3>Ven, siéntate y vuela</h3>
-          <p>Normalmente a primera hora de la mañana o a última de la tarde, siempre sujeto a la meteorología y a las condiciones de vuelo.</p>
-        </li>
-      </ol>
     </div>
   </section>
 
   <!-- RESERVA -->
-  <section class="section booking" id="reserva" aria-labelledby="reserva-title">
+  <section class="booking" id="reserva" data-scene="reserva" aria-labelledby="reserva-title">
     <div class="wrap">
-      <div class="section-head section-head--split">
-        <div>
-          <p class="eyebrow reveal">Reserva</p>
-          <h2 class="h2" id="reserva-title" style="margin-top:1rem">
-            <span class="split-line"><span>Prepara tu vuelo</span></span>
-            <span class="split-line"><span style="--d:.1s">en <em>un minuto</em></span></span>
-          </h2>
-        </div>
-        <p class="lead reveal">Elige el vuelo y dinos cuándo te gustaría volar. Miguel Ángel te contactará para confirmar día y hora según la previsión meteorológica. Las salidas por día son limitadas: reserva con unos días de antelación.<br><a class="link-arrow" href="vuelos.html" style="margin-top:1rem">Compara los vuelos y precios <svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+      <div class="booking__head">
+        <h2 class="h2" id="reserva-title">Prepara tu vuelo en un minuto</h2>
+        <p>Elige el vuelo y dinos cuándo te gustaría volar. Miguel Ángel te contactará para confirmar día y hora según la previsión meteorológica. Las salidas por día son limitadas: reserva con unos días de antelación.</p>
       </div>
 
       <div class="booking__grid">
-        <form class="panel booking-form reveal" id="booking-form" novalidate>
+        <form class="booking-form" id="booking-form" novalidate>
           <fieldset class="form-step">
             <legend><i>1</i>Elige tu vuelo</legend>
             <div class="choice-grid">
               <div class="choice">
                 <input type="radio" name="vuelo" id="v20" value="20" data-price="85" data-label="Vuelo de 20 minutos" checked>
-                <label for="v20"><b>20 minutos</b><span>Vuelo biplaza · <em>85&nbsp;€</em></span></label>
+                <label for="v20"><b>20 minutos</b><span>Vuelo biplaza, 85&nbsp;€</span></label>
               </div>
               <div class="choice">
                 <input type="radio" name="vuelo" id="v40" value="40" data-price="130" data-label="Vuelo de 40 minutos">
-                <label for="v40"><b>40 minutos</b><span>Vuelo biplaza · <em>130&nbsp;€</em></span></label>
+                <label for="v40"><b>40 minutos</b><span>Vuelo biplaza, 130&nbsp;€</span></label>
               </div>
               <div class="choice">
                 <input type="radio" name="vuelo" id="vcarta" value="carta" data-price="" data-label="Vuelo a la carta">
-                <label for="vcarta"><b>A la carta</b><span>Tiempo y lugar a medida · presupuesto</span></label>
+                <label for="vcarta"><b>A la carta</b><span>Tiempo y lugar a medida, con presupuesto</span></label>
               </div>
               <div class="choice">
                 <input type="checkbox" name="regalo" id="regalo" value="si">
@@ -395,7 +401,7 @@
             <div class="field-grid">
               <div class="choice">
                 <input type="checkbox" name="video" id="video" value="si">
-                <label for="video"><b>Vídeo y fotos</b><span>Cámara de 180º · <em>+15&nbsp;€</em> por vuelo</span></label>
+                <label for="video"><b>Vídeo y fotos</b><span>Cámara de 180º, +15&nbsp;€ por vuelo</span></label>
               </div>
               <div class="field">
                 <label id="pax-label" for="pax">Número de vuelos <small>(una persona por vuelo)</small></label>
@@ -452,23 +458,20 @@
               </div>
               <label class="check field--full" id="privacidad-wrap">
                 <input type="checkbox" id="privacidad" name="privacidad" required aria-describedby="privacidad-error">
-                <span>He leído y acepto la <a href="privacidad.html">política de privacidad</a>. Usaremos tus datos solo para responder a tu solicitud.<span class="field__error" id="privacidad-error" style="display:block"></span></span>
+                <span>He leído y acepto la <a href="privacidad.html">política de privacidad</a>. Usaremos tus datos solo para responder a tu solicitud.<span class="field__error" id="privacidad-error"></span></span>
               </label>
             </div>
           </fieldset>
 
           <div class="form-actions">
-            <button class="btn" type="submit" data-magnetic>Enviar solicitud <svg aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+            <button class="btn" type="submit">Enviar solicitud</button>
             <p id="form-mode-note">Se abrirá tu aplicación de correo con la solicitud ya redactada para info@alvuelolarioja.com.</p>
           </div>
           <div class="form-status" id="form-status" role="status" aria-live="polite" tabindex="-1"></div>
         </form>
 
-        <aside class="panel summary reveal" style="--d:.1s" aria-labelledby="summary-title">
-          <div class="summary__head">
-            <h3 id="summary-title">Tu vuelo</h3>
-            <svg class="icon" aria-hidden="true" style="color:var(--sun)"><use href="#i-takeoff"/></svg>
-          </div>
+        <aside class="summary" aria-labelledby="summary-title">
+          <h3 id="summary-title">Tu vuelo</h3>
           <dl>
             <div><dt>Vuelo</dt><dd id="s-vuelo">Vuelo de 20 minutos</dd></div>
             <div><dt>Vídeo y fotos</dt><dd id="s-video">No</dd></div>
@@ -491,45 +494,33 @@
   </section>
 
   <!-- CONTACTO -->
-  <section class="section contact" id="contacto" aria-labelledby="contacto-title">
-    <div class="wrap">
-      <div class="contact__grid">
-        <div>
-          <p class="eyebrow reveal">Contacto</p>
-          <h2 class="h2 reveal" id="contacto-title" style="margin-top:1rem">Llama, pregunta <em>y vuela</em></h2>
-          <a class="contact__phone reveal" href="tel:+34629309090">629 30 90 90</a>
-          <p class="lead reveal">Atiende directamente el piloto, Miguel Ángel. Reservas de lunes a domingo, de 9:00 a 20:00 h.</p>
-        </div>
-        <div class="contact-cards">
-          <a class="contact-card reveal" href="mailto:info@alvuelolarioja.com"><span class="ico"><svg aria-hidden="true"><use href="#i-mail"/></svg></span><span><small>Email</small><strong>info@alvuelolarioja.com</strong></span><svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <a class="contact-card reveal" data-whatsapp hidden href="#" target="_blank" rel="noopener"><span class="ico"><svg aria-hidden="true"><use href="#i-chat"/></svg></span><span><small>WhatsApp</small><strong>Escríbenos</strong></span><svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <div class="contact-card reveal"><span class="ico"><svg aria-hidden="true"><use href="#i-clock"/></svg></span><span><small>Horario de reservas</small><strong>Lunes a domingo · 9:00–20:00</strong></span></div>
-          <a class="contact-card reveal" href="https://es-es.facebook.com/alvuelolarioja" target="_blank" rel="noopener"><span class="ico"><svg aria-hidden="true"><use href="#i-facebook"/></svg></span><span><small>Facebook</small><strong>alvuelolarioja</strong></span><svg aria-hidden="true"><use href="#i-external"/></svg></a>
-          <a class="contact-card reveal" href="https://www.youtube.com/channel/UCisc0YVPK5831yDoZSS8hEw" target="_blank" rel="noopener"><span class="ico"><svg aria-hidden="true"><use href="#i-youtube"/></svg></span><span><small>YouTube</small><strong>Vídeos de nuestros vuelos</strong></span><svg aria-hidden="true"><use href="#i-external"/></svg></a>
-        </div>
+  <section class="contact" id="contacto" data-scene="contacto" aria-labelledby="contacto-title">
+    <div class="wrap contact__grid">
+      <div>
+        <h2 class="h2" id="contacto-title">Llama, pregunta y vuela</h2>
+        <a class="contact__phone" href="tel:+34629309090">629 30 90 90</a>
+        <p>Atiende directamente el piloto, Miguel Ángel. Reservas de lunes a domingo, de 9:00 a 20:00 h.</p>
+        <p class="contact__zone"><svg aria-hidden="true"><use href="#i-pin"/></svg><span><strong>Inmediaciones de Logroño, La Rioja.</strong> El lugar de salida habitual te lo indicamos al confirmar la reserva. ¿Quieres volar sobre otra población? Consúltalo.</span></p>
       </div>
-      <div class="contact__map reveal">
-        <img src="assets/img/vista-aerea-180-1280.webp" srcset="assets/img/vista-aerea-180-640.webp 640w, assets/img/vista-aerea-180-1280.webp 1280w, assets/img/vista-aerea-180-1920.webp 1920w" sizes="(min-width: 1320px) 1320px, 100vw" width="1920" height="960" loading="lazy" decoding="async" alt="">
-        <div>
-          <p class="eyebrow">Zona de vuelo</p>
-          <h3 style="margin-top:.6rem">Inmediaciones de Logroño, La Rioja</h3>
-          <p>El lugar de salida habitual está en los alrededores de Logroño y te lo indicamos al confirmar la reserva. ¿Quieres volar sobre otra población? Consúltalo.</p>
-        </div>
-      </div>
+      <ul class="contact__list">
+        <li><a href="mailto:info@alvuelolarioja.com"><svg aria-hidden="true"><use href="#i-mail"/></svg><span><small>Email</small>info@alvuelolarioja.com</span></a></li>
+        <li><a data-whatsapp hidden href="#" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-chat"/></svg><span><small>WhatsApp</small>Escríbenos</span></a></li>
+        <li><div><svg aria-hidden="true"><use href="#i-clock"/></svg><span><small>Horario de reservas</small>Lunes a domingo, de 9:00 a 20:00</span></div></li>
+        <li><a href="https://es-es.facebook.com/alvuelolarioja" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-facebook"/></svg><span><small>Facebook</small>alvuelolarioja</span></a></li>
+        <li><a href="https://www.youtube.com/channel/UCisc0YVPK5831yDoZSS8hEw" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-youtube"/></svg><span><small>YouTube</small>Vídeos de nuestros vuelos</span></a></li>
+      </ul>
     </div>
   </section>
 
-  <!-- CTA FINAL -->
-  <section class="final-cta" aria-labelledby="cta-title">
-    <img src="assets/img/pasajeros-saludando-1280.webp" srcset="assets/img/pasajeros-saludando-640.webp 640w, assets/img/pasajeros-saludando-1280.webp 1280w, assets/img/pasajeros-saludando-1800.webp 1800w" sizes="100vw" width="1800" height="1157" loading="lazy" decoding="async" alt="">
-    <div class="wrap">
-      <p class="eyebrow reveal" style="justify-content:center">¿Volamos?</p>
-      <h2 class="display" id="cta-title">
-        <span class="split-line"><span>La Rioja te espera</span></span>
-        <span class="split-line"><span style="--d:.1s"><em>desde arriba</em></span></span>
-      </h2>
-      <div class="hero__ctas reveal">
-        <a class="btn" href="#reserva" data-magnetic>Reserva tu vuelo <svg aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+  <!-- ATERRIZAJE -->
+  <section class="landing" data-scene="aterrizaje" aria-labelledby="cta-title">
+    <div class="landing__photo" aria-hidden="true">
+      <img src="assets/img/pasajeros-saludando-1280.webp" srcset="assets/img/pasajeros-saludando-640.webp 640w, assets/img/pasajeros-saludando-1280.webp 1280w, assets/img/pasajeros-saludando-1800.webp 1800w" sizes="100vw" width="1800" height="1157" loading="lazy" decoding="async" alt="">
+    </div>
+    <div class="wrap landing__inner">
+      <h2 class="landing__title" id="cta-title">La Rioja te espera desde arriba</h2>
+      <div class="hero__ctas">
+        <a class="btn" href="#reserva">Reserva tu vuelo</a>
         <a class="btn btn--ghost" href="tel:+34629309090"><svg aria-hidden="true"><use href="#i-phone"/></svg>629 30 90 90</a>
       </div>
     </div>
@@ -542,7 +533,7 @@
       <div class="footer__brand">
         <img src="assets/img/logo-alvuelo.webp" width="245" height="120" alt="Al Vuelo" loading="lazy">
         <p>Vuelos en parapente biplaza a motor (paratrike) en Logroño, La Rioja. Ven, siéntate y vuela.</p>
-        <p style="margin-top:.6rem">Registro Turismo La Rioja: TA-LR-32</p>
+        <p>Registro Turismo La Rioja: TA-LR-32</p>
         <div class="social">
           <a href="https://es-es.facebook.com/alvuelolarioja" target="_blank" rel="noopener" aria-label="Facebook de Al Vuelo La Rioja"><svg aria-hidden="true"><use href="#i-facebook"/></svg></a>
           <a href="https://www.youtube.com/channel/UCisc0YVPK5831yDoZSS8hEw" target="_blank" rel="noopener" aria-label="Canal de YouTube de Al Vuelo La Rioja"><svg aria-hidden="true"><use href="#i-youtube"/></svg></a>
@@ -578,7 +569,7 @@
       </div>
     </div>
     <div class="footer__bottom">
-      <p style="margin:0">© <span data-year>2026</span> Al Vuelo La Rioja</p>
+      <p>© <span data-year>2026</span> Al Vuelo La Rioja</p>
       <ul>
         <li><a href="aviso-legal.html">Aviso legal</a></li>
         <li><a href="privacidad.html">Privacidad</a></li>
@@ -594,9 +585,10 @@
   <a class="btn" href="#reserva">Reserva tu vuelo</a>
 </div>
 
-
 <script src="assets/js/config.js?v=13"></script>
 <script src="assets/js/main.js?v=13" defer></script>
+<script src="assets/js/sky3d.js?v=1" defer></script>
+<script src="assets/js/vuelo.js?v=1" defer></script>
 <script src="assets/js/chat.js?v=13" defer></script>
 </body>
 </html>
